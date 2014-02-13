@@ -1,0 +1,14 @@
+
+repositories {
+    mavenCentral()
+}
+
+apply plugin: 'java'
+
+dependencies {
+    compile files('libs/openapi.jar', 'libs/server-api.jar' , 'libs/common-api.jar')
+
+}
+
+sourceCompatibility = 1.5
+version = '1.0.0'
