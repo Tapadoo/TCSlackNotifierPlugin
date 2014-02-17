@@ -11,6 +11,8 @@ import jetbrains.buildServer.tests.TestName;
 import jetbrains.buildServer.users.NotificatorPropertyKey;
 import jetbrains.buildServer.users.PropertyKey;
 import jetbrains.buildServer.users.SUser;
+import jetbrains.buildServer.users.UserSet;
+import jetbrains.buildServer.vcs.SelectPrevBuildPolicy;
 import jetbrains.buildServer.vcs.VcsRoot;
 
 import java.io.BufferedOutputStream;
@@ -42,8 +44,35 @@ public class SlackNotifier implements Notificator {
         notificatorRegistry.register(this, userProps);
     }
 
-    private void postSuccessToSlack(String name , Set<SUser> users)
+    private void postSuccessToSlack(String name , Set<SUser> users , SRunningBuild sRunningBuild)
     {
+        UserSet<SUser> commiters = sRunningBuild.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
+        StringBuilder committersString = new StringBuilder();
+
+        for( SUser commiter : commiters.getUsers() )
+        {
+            if( commiter != null)
+            {
+                String commiterName = commiter.getName() ;
+                if( commiterName == null || commiterName.equals("") )
+                {
+                    commiterName = commiter.getUsername() ;
+                }
+
+                if( commiterName != null && !commiterName.equals(""))
+                {
+                    committersString.append(commiterName);
+                    committersString.append(",");
+                }
+            }
+        }
+
+        if( committersString.length() > 0 )
+        {
+            committersString.deleteCharAt(committersString.length()-1); //remove the last ,
+        }
+
+        String commitMsg = committersString.toString();
         String postUrl = "https://tapadoo.slack.com/services/hooks/incoming-webhook?token=";
         for( SUser user : users)
         {
@@ -54,7 +83,17 @@ public class SlackNotifier implements Notificator {
                 String finalUrl = postUrl + user.getPropertyValue(TOKEN);
                 URL url = new URL(finalUrl);
 
-                String payload = String.format("payload={\"channel\": \"%s\", \"username\": \"TeamCity\", \"text\": \"Project '%s' built successfully.\", \"icon_url\":\"http://build.tapadoo.com/img/icons/TeamCity32.png\"}" , channel, name);
+                String message = "";
+
+                if( commitMsg.length() > 0 )
+                {
+                    message = String.format("Project '%s' built successfully, with changes by %s" , name , commitMsg);
+                }
+                else
+                {
+                    message = String.format("Project '%s' built successfully." , name);
+                }
+                String payload = String.format("payload={\"channel\": \"%s\", \"username\": \"TeamCity\", \"text\": \"%s\", \"icon_url\":\"http://build.tapadoo.com/img/icons/TeamCity32.png\"}" , channel, message);
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
@@ -81,7 +120,7 @@ public class SlackNotifier implements Notificator {
 
     @Override
     public void notifyBuildSuccessful(SRunningBuild sRunningBuild, Set<SUser> sUsers) {
-        postSuccessToSlack(sRunningBuild.getFullName() , sUsers);
+        postSuccessToSlack(sRunningBuild.getFullName() , sUsers, sRunningBuild);
     }
 
     @Override

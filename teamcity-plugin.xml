@@ -6,7 +6,7 @@
         <name>slackNotifier</name> <!-- the name of plugin used in teamcity -->
         <display-name>Slack Notifier</display-name>
         <description>Post build success notifications to Slack</description>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </info>
     <deployment use-separate-classloader="true" /> <!-- load server plugin's classes in separate classloader-->
     <parameters>
