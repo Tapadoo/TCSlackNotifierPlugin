@@ -12,3 +12,15 @@ dependencies {
 
 sourceCompatibility = 1.5
 version = '1.0.0'
+
+
+task buildZip(dependsOn:'jar' , type: Zip) {
+
+        from('.')
+        include('teamcity-plugin.xml')
+
+        into('server') {
+            from jar.outputs.files
+            include('*.jar')
+        }
+}
