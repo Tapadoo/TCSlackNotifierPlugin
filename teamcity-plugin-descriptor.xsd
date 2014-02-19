@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema version="1.0"
+            xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified" 
+  >
+
+  <xs:element name="teamcity-plugin" type="TeamCityPluginDescriptor"/>
+  <xs:complexType name="TeamCityPluginDescriptor">
+    <xs:sequence>
+      <xs:element name="info">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="name" minOccurs="1" maxOccurs="1" type="xs:string"/>
+            <xs:element name="display-name" minOccurs="1" maxOccurs="1" type="xs:string"/>
+            <xs:element name="version" minOccurs="1" maxOccurs="1" type="xs:string"/>
+            <xs:element name="description" minOccurs="0" maxOccurs="1" type="xs:string"/>
+            <xs:element name="download-url" minOccurs="0" maxOccurs="1" type="xs:string"/>
+            <xs:element name="email" minOccurs="0" maxOccurs="1" type="xs:string"/>
+            <xs:element name="vendor" minOccurs="0" maxOccurs="1">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="name" minOccurs="1" maxOccurs="1" type="xs:string"/>
+                  <xs:element name="url" minOccurs="0" maxOccurs="1" type="xs:string"/>
+                  <xs:element name="logo" minOccurs="0" maxOccurs="1" type="xs:string"/>
+                  <!-- to resolved to web resources-->
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+
+      <xs:element name="requirements" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="min-build" type="xs:long" use="optional"/>
+          <xs:attribute name="max-build" type="xs:long" use="optional"/>
+        </xs:complexType>
+      </xs:element>
+
+
+      <xs:element name="deployment" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="use-separate-classloader" type="xs:boolean" default="false" use="optional"/>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="parameters" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="name" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

@@ -84,16 +84,25 @@ public class SlackNotifier implements Notificator {
                 URL url = new URL(finalUrl);
 
                 String message = "";
+                String payload = "" ;
+
+                /**
+                 * This is getting ugly, I need to stop using string formatting and start using a json class
+                 */
 
                 if( commitMsg.length() > 0 )
                 {
-                    message = String.format("Project '%s' built successfully, with changes by %s" , name , commitMsg);
+                    message = String.format("Project '%s' built successfully." , name);
+                    String attachments = "\"attachments\":[{\"fallback\":\"Changes by"+ commitMsg +"\",\"color\":\"good\",\"fields\":[{ \"title\":\"Changes By\",\"value\":\""+ commitMsg+"\",\"short\":false}]}]";
+                    payload = String.format("payload={\"channel\": \"%s\", \"username\": \"TeamCity\", \"text\": \"%s\", \"icon_url\":\"http://build.tapadoo.com/img/icons/TeamCity32.png\" , %s }" , channel, message , attachments);
+
                 }
                 else
                 {
                     message = String.format("Project '%s' built successfully." , name);
+                    payload = String.format("payload={\"channel\": \"%s\", \"username\": \"TeamCity\", \"text\": \"%s\", \"icon_url\":\"http://build.tapadoo.com/img/icons/TeamCity32.png\"}" , channel, message);
+
                 }
-                String payload = String.format("payload={\"channel\": \"%s\", \"username\": \"TeamCity\", \"text\": \"%s\", \"icon_url\":\"http://build.tapadoo.com/img/icons/TeamCity32.png\"}" , channel, message);
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
