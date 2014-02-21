@@ -1,5 +1,9 @@
 package com.tapadoo.slacknotifier;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import jetbrains.buildServer.Build;
 import  jetbrains.buildServer.notification.Notificator ;
 import jetbrains.buildServer.notification.NotificatorRegistry;
@@ -37,11 +41,23 @@ public class SlackNotifier implements Notificator {
     private static final PropertyKey CHANNEL_NAME = new NotificatorPropertyKey(TYPE, SLACK_CHANNEL_NAME);
     private static final PropertyKey TOKEN = new NotificatorPropertyKey(TYPE, SLACK_TOKEN);
 
+    private Gson gson ;
+
     public SlackNotifier(NotificatorRegistry notificatorRegistry) throws IOException {
         ArrayList<UserPropertyInfo> userProps = new ArrayList<UserPropertyInfo>();
         userProps.add(new UserPropertyInfo(SLACK_CHANNEL_NAME, "Channel Name"));
         userProps.add(new UserPropertyInfo(SLACK_TOKEN, "Webhook Token"));
         notificatorRegistry.register(this, userProps);
+    }
+
+    private Gson getGson()
+    {
+        if( gson == null )
+        {
+            gson = new GsonBuilder().create() ;
+        }
+
+        return gson ;
     }
 
     private void postSuccessToSlack(String name , Set<SUser> users , SRunningBuild sRunningBuild)
@@ -84,34 +100,52 @@ public class SlackNotifier implements Notificator {
                 URL url = new URL(finalUrl);
 
                 String message = "";
-                String payload = "" ;
 
-                /**
-                 * This is getting ugly, I need to stop using string formatting and start using a json class
-                 */
+                JsonObject payloadObj = new JsonObject();
+                payloadObj.addProperty("channel" , channel);
+                payloadObj.addProperty("username" , "TeamCity");
+                payloadObj.addProperty("text", String.format("Project '%s' built successfully." , name));
+                payloadObj.addProperty("icon_url","http://build.tapadoo.com/img/icons/TeamCity32.png");
 
                 if( commitMsg.length() > 0 )
                 {
-                    message = String.format("Project '%s' built successfully." , name);
-                    String attachments = "\"attachments\":[{\"fallback\":\"Changes by"+ commitMsg +"\",\"color\":\"good\",\"fields\":[{ \"title\":\"Changes By\",\"value\":\""+ commitMsg+"\",\"short\":false}]}]";
-                    payload = String.format("payload={\"channel\": \"%s\", \"username\": \"TeamCity\", \"text\": \"%s\", \"icon_url\":\"http://build.tapadoo.com/img/icons/TeamCity32.png\" , %s }" , channel, message , attachments);
+                    JsonArray attachmentsObj = new JsonArray();
+                    JsonObject attachment = new JsonObject();
 
-                }
-                else
-                {
-                    message = String.format("Project '%s' built successfully." , name);
-                    payload = String.format("payload={\"channel\": \"%s\", \"username\": \"TeamCity\", \"text\": \"%s\", \"icon_url\":\"http://build.tapadoo.com/img/icons/TeamCity32.png\"}" , channel, message);
+                    attachment.addProperty("fallback", "Changes by"+ commitMsg);
+                    attachment.addProperty("color","good");
 
+                    JsonArray fields = new JsonArray();
+                    JsonObject field = new JsonObject() ;
+
+                    field.addProperty("title","Changes By");
+                    field.addProperty("value",commitMsg);
+                    field.addProperty("short", false);
+
+                    fields.add(field);
+                    attachment.add("fields",fields);
+
+                    attachmentsObj.add(attachment);
+                    payloadObj.add("attachments" , attachmentsObj);
                 }
 
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
 
                 BufferedOutputStream bos = new BufferedOutputStream(conn.getOutputStream());
-                bos.write(payload.getBytes("utf8"));
-                bos.flush();
 
-                conn.getResponseCode() ;
+                String payloadJson = getGson().toJson(payloadObj);
+                String bodyContents = "payload=" + payloadJson ;
+                bos.write(bodyContents.getBytes("utf8"));
+                bos.flush();
+                bos.close();
+
+                int serverResponseCode = conn.getResponseCode() ;
+
+                conn.disconnect();
+                conn = null ;
+                url = null ;
+
             }
             catch ( MalformedURLException ex )
             {

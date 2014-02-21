@@ -5,15 +5,28 @@ repositories {
 
 apply plugin: 'java'
 
+
+sourceCompatibility = 1.5
+version = '1.0.3'
+
+configurations {
+    deploy
+}
+
 dependencies {
     compile files('libs/openapi.jar', 'libs/server-api.jar' , 'libs/common-api.jar')
+    compile 'com.google.code.gson:gson:2.+'
+    deploy 'com.google.code.gson:gson:2.+'
 
 }
 
-sourceCompatibility = 1.5
-version = '1.0.2'
 
-
+/**
+ *
+ * not using
+ apply plugin: 'distribution' and distributions closure as it makes a subfolder in zip which I do not want
+ *
+ * */
 task buildZip(dependsOn:'jar' , type: Zip) {
 
         from('.')
@@ -21,6 +34,9 @@ task buildZip(dependsOn:'jar' , type: Zip) {
 
         into('server') {
             from jar.outputs.files
+            include('*.jar')
+
+            from configurations.deploy
             include('*.jar')
         }
 }
