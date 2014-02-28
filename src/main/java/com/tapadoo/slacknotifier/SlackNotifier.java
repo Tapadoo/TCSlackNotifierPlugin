@@ -43,6 +43,10 @@ public class SlackNotifier implements Notificator {
 
     private Gson gson ;
 
+    //Todo - make user configurable or plugin configurable or something
+    private static final String postUrl = "https://tapadoo.slack.com/services/hooks/incoming-webhook?token=";
+    private static final String logoUrl = "http://build.tapadoo.com/img/icons/TeamCity32.png";
+
     public SlackNotifier(NotificatorRegistry notificatorRegistry) throws IOException {
         ArrayList<UserPropertyInfo> userProps = new ArrayList<UserPropertyInfo>();
         userProps.add(new UserPropertyInfo(SLACK_CHANNEL_NAME, "Channel Name"));
@@ -89,7 +93,6 @@ public class SlackNotifier implements Notificator {
         }
 
         String commitMsg = committersString.toString();
-        String postUrl = "https://tapadoo.slack.com/services/hooks/incoming-webhook?token=";
         for( SUser user : users)
         {
 
@@ -105,7 +108,7 @@ public class SlackNotifier implements Notificator {
                 payloadObj.addProperty("channel" , channel);
                 payloadObj.addProperty("username" , "TeamCity");
                 payloadObj.addProperty("text", String.format("Project '%s' built successfully." , name));
-                payloadObj.addProperty("icon_url","http://build.tapadoo.com/img/icons/TeamCity32.png");
+                payloadObj.addProperty("icon_url",logoUrl);
 
                 if( commitMsg.length() > 0 )
                 {
