@@ -1,17 +1,8 @@
 # TCStackNotifierPlugin - TeamCity -> Stack Notifications
 
-A hastily built plugin for [TeamCity](http://www.jetbrains.com/teamcity/) to post notifications to [slack](https://slack.com/)
+A plugin for [TeamCity](http://www.jetbrains.com/teamcity/) to post notifications to [slack](https://slack.com/)
 
-#Before Installing
-
-As it's something I put together in an excited rush, not everything that should be configurable is, so some stuff was hard coded just for our company. I'll change this in a future build at some point, but pull requests are welcome :) - in `SlackNotifier.java` there's a `postUrl` field hardcoded to our instance of slack:
-
-```
-    //Todo - make user configurable or plugin configurable or something
-    private static final String postUrl = "https://tapadoo.slack.com/services/hooks/incoming-webhook?token=";
-    private static final String logoUrl = "http://build.tapadoo.com/img/icons/TeamCity32.png";
-```
-You'll need to change that before compiling. You might as well change the logo location also.
+It works by registering as a server listener, and posts to slack on successful builds finishing.
 
 #Build Plugin
 
@@ -19,14 +10,14 @@ Gradle is used to build. Wrapper is included in the project so you dont need to 
 
     ./gradlew buildZip
 
-this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-1.0.3.zip`
+this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-<version>.zip`
 
 #Install Plugin
 
 Copy the zip file into TeamCity plugin directory inside the data directory, usually `.BuildServer`
 
 ```
-scp build/distributions/TCSlackNotifierPlugin-1.0.3.zip buildserver:.BuildServer/plugins/slackNotifier.zip
+scp build/distributions/TCSlackNotifierPlugin-<version>.zip buildserver:.BuildServer/plugins/slackNotifier.zip
 ```
 
 Then restart TeamCity.
@@ -37,9 +28,22 @@ Then restart TeamCity.
 Add a new webhook integration. Make a note of the Token.
 
 ###In TeamCity
-go to your Notification Settings. You'll see a slack notifier option now. Set the token and the desired slack channel.
 
-Create a new notification rule for slack. What I ended up using is All projects (not just those with my changes) and successful only. The plugin intentionally only bothers posting successes for now by design. I wanted everyone to bask in the warm feeling of success while allowing individuals to continue to receive failures directly via usual notifcations and hide their shame while they fixed their broken builds.
+Edit the main config file, usually `.BuildServer/config/main-config.xml` and add an element like so:
+```
+<server rootURL="http://localhost:8111">
+  ...
+  <slackNotifier>
+    <slackWebToken>testToken2</slackWebToken>
+    <slackDefaultChannel>#general</slackDefaultChannel>
+    <slackPostUrl>https://tapadoo.slack.com/services/hooks/incoming-webhook?token=</slackPostUrl>
+    <slackLogoUrl>http://build.tapadoo.com/img/icons/TeamCity32.png</slackLogoUrl>
+  </slackNotifier>
+  ...
+  ...
+```
+
+Replace the web token with the token from slack. Change the postUrl also to point to the right slack team. The url can be found in the webhook integraton page, just remove the token from the end. Change the logo url whatever you want.
 
 #Note on TeamCity version support
 
@@ -47,7 +51,7 @@ I'm still using **TeamCity 7.1** so I haven't even checked to see if its ok on n
 
 ###Issues
 
-* all notifications go to the one channel. Could setup multiple users with different settings, or maybe add a channel as a build setting or env var or something and read that from plugin. Then that would allow changing from default on a per team city configration basis.
-* It's configured as a user notification on TC , but posts to all on Stack. Dont think you can do 'server' notifications. Side effect of this is only one user should configure the plugin on the teamcity side. If multiple people configure it, you may get mutliple slack posts, unless they are going to different channels.
-* I found if other notifications fired for success (such as jabber notifications for my changes) then slack notifications didn't happen for my changes. Maybe a good idea to setup on it's own account or something or remove other success notifications
-* I never bothered testing with personal builds. It might fire for those. Might not be desired. Should be easy to add a check for.
+* all xml config - needs web ui extensions for updating settings from GUI. Considering it.
+* channel can be changed per-project either by environmental variable (SLACK_CHANNEL) or by changing the project specific xml in the data directory. not properly documented yet - could also use web ui extension or custom tab to allow settings project settings from UI, if web ui input is done.
+* All or nothing notifications. Personally, I wanted all projects getting posted, and didn't want to have to go edit every project to enable notifications. some people might not like that. I guess if there was a web ui for project level settings, it could include a checkbox to enable or disable notifications
+    * actually, I should add a enabled flag to the SlackProjectSettings even before web stuff - at least that way server admin can tweak xml to disable. better than nothing.
