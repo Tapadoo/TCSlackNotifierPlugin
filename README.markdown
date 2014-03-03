@@ -4,7 +4,7 @@ A hastily built plugin for [TeamCity](http://www.jetbrains.com/teamcity/) to pos
 
 #Before Installing
 
-As it's something I put together in an excited rush, not everything that should be configurable is, so some stuff was hard coded just for our company. I'll change this in a future build at some point, but pull requests are welcome :) - in `SlackNotifier.java` there's a `postUrl` field hardcoded to our instance of slack:
+As it's something I put together in an excited rush, not everything that should be configurable is, so some stuff was hard coded just for our company. I'll change this in a future build at some point (in progress in develop branch), but pull requests are welcome :) - in `SlackNotifier.java` there's a `postUrl` field hardcoded to our instance of slack:
 
 ```
     //Todo - make user configurable or plugin configurable or something
@@ -19,14 +19,14 @@ Gradle is used to build. Wrapper is included in the project so you dont need to 
 
     ./gradlew buildZip
 
-this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-1.0.3.zip`
+this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin--<version>.zip`
 
 #Install Plugin
 
 Copy the zip file into TeamCity plugin directory inside the data directory, usually `.BuildServer`
 
 ```
-scp build/distributions/TCSlackNotifierPlugin-1.0.3.zip buildserver:.BuildServer/plugins/slackNotifier.zip
+scp build/distributions/TCSlackNotifierPlugin-<version>.zip buildserver:.BuildServer/plugins/slackNotifier.zip
 ```
 
 Then restart TeamCity.
@@ -46,6 +46,8 @@ Create a new notification rule for slack. What I ended up using is All projects 
 I'm still using **TeamCity 7.1** so I haven't even checked to see if its ok on newer versions. It's probably grand.
 
 ###Issues
+
+Some of these issues are being addressed in the 'develop' branch, where the plugin is being changed to use different apis to hook into builds and to manage server and project level configuration.
 
 * all notifications go to the one channel. Could setup multiple users with different settings, or maybe add a channel as a build setting or env var or something and read that from plugin. Then that would allow changing from default on a per team city configration basis.
 * It's configured as a user notification on TC , but posts to all on Stack. Dont think you can do 'server' notifications. Side effect of this is only one user should configure the plugin on the teamcity side. If multiple people configure it, you may get mutliple slack posts, unless they are going to different channels.
