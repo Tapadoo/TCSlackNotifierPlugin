@@ -45,13 +45,27 @@ Edit the main config file, usually `.BuildServer/config/main-config.xml` and add
 
 Replace the web token with the token from slack. Change the postUrl also to point to the right slack team. The url can be found in the webhook integraton page, just remove the token from the end. Change the logo url whatever you want.
 
+This by default will post all builds to slack. you can tweak these on a project level though
+
+####Project Config (Optional)
+
+To change channel or disable per project:
+
+Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere inside `.BuildServer/config/projects/PROJECTNAME`
+```
+<settings>
+  <slackSettings enabled="true">
+    <channel>#blah</channel>
+  </slackSettings>
+</settings>
+```
+
 #Note on TeamCity version support
 
-I'm still using **TeamCity 7.1** so I haven't even checked to see if its ok on newer versions. It's probably grand.
+I'm still using **TeamCity 7.1** , but a quick test on the free version of TeamCity 8 went ok
 
 ###Issues
 
 * all xml config - needs web ui extensions for updating settings from GUI. Considering it.
-* channel can be changed per-project either by environmental variable (SLACK_CHANNEL) or by changing the project specific xml in the data directory. not properly documented yet - could also use web ui extension or custom tab to allow settings project settings from UI, if web ui input is done.
-* All or nothing notifications. Personally, I wanted all projects getting posted, and didn't want to have to go edit every project to enable notifications. some people might not like that. I guess if there was a web ui for project level settings, it could include a checkbox to enable or disable notifications
-    * actually, I should add a enabled flag to the SlackProjectSettings even before web stuff - at least that way server admin can tweak xml to disable. better than nothing.
+* channel can be changed per-project either by environmental variable (SLACK_CHANNEL) or by changing the project specific xml in the data directory. This could also use web ui extension UI for editing.
+* All or nothing notifications. By default, all builds are posted. It can be disabled per project, but not currently by build config.

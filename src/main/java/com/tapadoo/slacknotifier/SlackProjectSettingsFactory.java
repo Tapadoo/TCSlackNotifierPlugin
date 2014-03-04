@@ -9,9 +9,11 @@ import jetbrains.buildServer.serverSide.settings.ProjectSettingsManager;
  */
 public class SlackProjectSettingsFactory implements ProjectSettingsFactory {
 
+    public static final String SETTINGS_KEY = "slackSettings";
+
     public SlackProjectSettingsFactory(ProjectSettingsManager projectSettingsManager)
     {
-        projectSettingsManager.registerSettingsFactory("slackSettings", this);
+        projectSettingsManager.registerSettingsFactory(SETTINGS_KEY, this);
     }
 
     public ProjectSettings createProjectSettings(String projectId) {

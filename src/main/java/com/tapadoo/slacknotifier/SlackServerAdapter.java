@@ -55,7 +55,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
     @Override
     public void buildFinished(SRunningBuild build) {
         super.buildFinished(build);
-        
 
         if( !build.isPersonal() && build.getBuildStatus().isSuccessful() )
         {
@@ -68,6 +67,13 @@ public class SlackServerAdapter extends BuildServerAdapter {
     }
 
     private void processSuccessfulBuild(SRunningBuild build) {
+
+        SlackProjectSettings projectSettings = (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(),"slackSettings");
+
+        if( ! projectSettings.isEnabled() )
+        {
+            return ;
+        }
 
         UserSet<SUser> commiters = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
         StringBuilder committersString = new StringBuilder();
@@ -99,7 +105,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         try{
 
-            SlackProjectSettings projectSettings = (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(),"slackSettings");
 
             String configuredChannel = build.getParametersProvider().get("SLACK_CHANNEL");
             String channel = this.slackConfig.getDefaultChannel();
@@ -113,12 +118,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 channel = projectSettings.getChannel() ;
             }
 
-            projectSettings.setChannel(channel);
-
-            SProject project = projectManager.findProjectById(build.getProjectId());
-            if (project != null) {
-           //     project.persist(); //Could be a bad idea actually to save. if someone changes via env, it changes the xml settings. after clearning the env, it doens't revert.
-            }
 
             String finalUrl = slackConfig.getPostUrl() + slackConfig.getToken();
             URL url = new URL(finalUrl);

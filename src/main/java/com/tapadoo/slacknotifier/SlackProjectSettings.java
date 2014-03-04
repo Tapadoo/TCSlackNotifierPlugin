@@ -1,6 +1,8 @@
 package com.tapadoo.slacknotifier;
 
 import jetbrains.buildServer.serverSide.settings.ProjectSettings;
+import org.jdom.Attribute;
+import org.jdom.DataConversionException;
 import org.jdom.Element;
 
 /**
@@ -10,6 +12,7 @@ public class SlackProjectSettings implements ProjectSettings {
 
     private String projectId;
     private String channel;
+    private boolean enabled = true ;
 
     public SlackProjectSettings(String projectId) {
         this.projectId = projectId ;
@@ -28,13 +31,35 @@ public class SlackProjectSettings implements ProjectSettings {
         this.channel = channel;
     }
 
+    public boolean isEnabled()
+    {
+        return this.enabled;
+    }
+
     public void dispose() {
 
     }
 
     public void readFrom(Element element) {
         Element channelElement = element.getChild("channel");
-        this.channel = channelElement.getText() ;
+        Attribute enabledAttr = element.getAttribute("enabled");
+
+        if( enabledAttr != null )
+        {
+            try {
+                enabled = enabledAttr.getBooleanValue() ;
+            } catch (DataConversionException e) {
+                enabled = true ;
+            }
+        }
+        else
+        {
+            enabled = true ;
+        }
+
+        if( channelElement != null ) {
+            this.channel = channelElement.getText();
+        }
     }
 
     public void writeTo(Element element) {
@@ -42,6 +67,10 @@ public class SlackProjectSettings implements ProjectSettings {
         Element channelElement = new Element("channel");
         channelElement.setText(this.channel);
 
+        Attribute enabledAttr = new Attribute("enabled",Boolean.toString(enabled)) ;
+        element.setAttribute( enabledAttr );
+
         element.addContent(channelElement);
     }
+
 }
