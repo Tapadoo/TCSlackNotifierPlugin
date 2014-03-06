@@ -7,15 +7,16 @@ apply plugin: 'java'
 
 
 sourceCompatibility = 1.5
-version = '1.0.3'
+version = '2.0.0'
 
 configurations {
     deploy
 }
 
 dependencies {
-    compile files('libs/openapi.jar', 'libs/server-api.jar' , 'libs/common-api.jar')
+    compile files('libs/openapi.jar', 'libs/server-api.jar' , 'libs/common-api.jar' , 'libs/servlet-api.jar')
     compile 'com.google.code.gson:gson:2.+'
+    compile 'org.jdom:jdom:1+'
     deploy 'com.google.code.gson:gson:2.+'
 
 }

@@ -2,5 +2,10 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 
 <beans default-autowire="constructor">
-  <bean id="slackNotifier" class="com.tapadoo.slacknotifier.SlackNotifier"/>
+
+    <bean id="slackSettingsFactory" class="com.tapadoo.slacknotifier.SlackProjectSettingsFactory"/>
+    <bean id="slackConfigProcessor" class="com.tapadoo.slacknotifier.SlackConfigProcessor" init-method="init"/>
+    <bean id="slackServerAdapter" class="com.tapadoo.slacknotifier.SlackServerAdapter" init-method="init"/>
+    <bean id="slackNotifierProjectTab" class="com.tapadoo.slacknotifier.webui.SlackProjectTab"/>
+    <bean id="slackAdminPage" class="com.tapadoo.slacknotifier.webui.SlackAdminPage"/>
 </beans>
