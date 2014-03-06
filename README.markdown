@@ -1,4 +1,4 @@
-# TCStackNotifierPlugin - TeamCity -> Stack Notifications
+# TCSlackNotifierPlugin - TeamCity -> Slack Notifications
 
 A plugin for [TeamCity](http://www.jetbrains.com/teamcity/) to post notifications to [slack](https://slack.com/)
 
