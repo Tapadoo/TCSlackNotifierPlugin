@@ -9,6 +9,10 @@ import jetbrains.buildServer.serverSide.settings.ProjectSettingsManager;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.users.UserSet;
 import jetbrains.buildServer.vcs.SelectPrevBuildPolicy;
+import org.joda.time.Duration;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -124,10 +128,25 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
             String message = "";
 
+            PeriodFormatter durationFormatter = new PeriodFormatterBuilder()
+                    .printZeroRarelyFirst()
+                    .appendHours()
+                    .appendSuffix(" hour", " hours")
+                    .appendSeparator(" ")
+                    .printZeroRarelyLast()
+                    .appendMinutes()
+                    .appendSuffix(" minute", "minutes")
+                    .appendSeparator(" and ")
+                    .appendSeconds()
+                    .appendSuffix(" second", " seconds")
+                    .toFormatter();
+
+            Duration buildDuration = new Duration(1000*build.getDuration());
+
             JsonObject payloadObj = new JsonObject();
             payloadObj.addProperty("channel" , channel);
             payloadObj.addProperty("username" , "TeamCity");
-            payloadObj.addProperty("text", String.format("Project '%s' built successfully." , build.getFullName()));
+            payloadObj.addProperty("text", String.format("Project '%s' built successfully in %s." , build.getFullName() , durationFormatter.print(buildDuration.toPeriod())));
             payloadObj.addProperty("icon_url",slackConfig.getLogoUrl());
 
             if( commitMsg.length() > 0 )
