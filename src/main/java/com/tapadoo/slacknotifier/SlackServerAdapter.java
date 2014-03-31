@@ -135,7 +135,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
                     .appendSeparator(" ")
                     .printZeroRarelyLast()
                     .appendMinutes()
-                    .appendSuffix(" minute", "minutes")
+                    .appendSuffix(" minute", " minutes")
                     .appendSeparator(" and ")
                     .appendSeconds()
                     .appendSuffix(" second", " seconds")
