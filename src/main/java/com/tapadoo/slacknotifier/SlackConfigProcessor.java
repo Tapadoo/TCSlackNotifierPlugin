@@ -1,6 +1,8 @@
 package com.tapadoo.slacknotifier;
 
 import jetbrains.buildServer.serverSide.MainConfigProcessor;
+import org.jdom.Attribute;
+import org.jdom.DataConversionException;
 import org.jdom.Element;
 
 /**
@@ -15,10 +17,19 @@ public class SlackConfigProcessor implements MainConfigProcessor {
 
     private static final java.lang.String PREF_CHILD_ELEMENT = "slackNotifier";
 
+    private static final java.lang.String ATTR_NAME_POST_SUCCESSFUL = "postSuccessful" ;
+    private static final java.lang.String ATTR_NAME_POST_STARTED = "postStarted" ;
+    private static final java.lang.String ATTR_NAME_POST_FAILED = "postFailed" ;
+
+
     private String token = "invalidToken";
     private String defaultChannel = "#general";
     private String postUrl;
     private String logoUrl;
+
+    private boolean postSuccessful = true ;
+    private boolean postStarted = false ;
+    private boolean postFailed = false ;
 
     public SlackConfigProcessor()
     {
@@ -28,6 +39,21 @@ public class SlackConfigProcessor implements MainConfigProcessor {
     public void init()
     {
 
+    }
+
+    public boolean postSuccessful()
+    {
+        return postSuccessful ;
+    }
+
+    public boolean postFailed()
+    {
+        return postFailed ;
+    }
+
+    public boolean postStarted()
+    {
+        return postStarted ;
     }
 
     public String getToken() {
@@ -65,10 +91,55 @@ public class SlackConfigProcessor implements MainConfigProcessor {
     public void readFrom(org.jdom.Element element) {
         Element mainConfigElement = element.getChild(PREF_CHILD_ELEMENT);
 
+        if( mainConfigElement == null )
+        {
+            token = "" ;
+            postUrl = "http://localhost/?token=" ;
+            return ;
+        }
+
         token = mainConfigElement.getChildText(PREF_KEY_SLACK_WEB_TOKEN);
         defaultChannel = mainConfigElement.getChildText(PREF_KEY_SLACK_DEF_CHANNEL);
         postUrl = mainConfigElement.getChildText(PREF_KEY_SLACK_POSTURL);
         logoUrl = mainConfigElement.getChildText(PREF_KEY_SLACK_LOGOURL);
+
+        Attribute postSuccessfulAttr = mainConfigElement.getAttribute(ATTR_NAME_POST_SUCCESSFUL);
+        Attribute postStartedAttr = mainConfigElement.getAttribute(ATTR_NAME_POST_STARTED);
+        Attribute postFailedAttr = mainConfigElement.getAttribute(ATTR_NAME_POST_FAILED);
+
+        if( postSuccessfulAttr != null )
+        {
+            try {
+                postSuccessful = postSuccessfulAttr.getBooleanValue();
+            }
+            catch( DataConversionException ex )
+            {
+                postSuccessful = true ;
+            }
+        }
+
+        if( postStartedAttr != null )
+        {
+            try {
+                postStarted = postStartedAttr.getBooleanValue();
+            }
+            catch( DataConversionException ex )
+            {
+                postStarted = false ;
+            }
+        }
+
+        if( postFailedAttr != null )
+        {
+            try {
+                postFailed = postFailedAttr.getBooleanValue();
+            }
+            catch( DataConversionException ex )
+            {
+                postFailed = false ;
+            }
+        }
+
     }
 
     public void writeTo(org.jdom.Element element) {
@@ -87,7 +158,7 @@ public class SlackConfigProcessor implements MainConfigProcessor {
         mainConfigElement.addContent(postUrlElement);
         mainConfigElement.addContent(logoUrlElement);
 
-        element.addContent(webTokenElement);
+        element.addContent(mainConfigElement);
 
 
     }

@@ -20,7 +20,7 @@
 <pre>
     &lt;server rootURL="http://localhost:8111"&gt;
         ...
-        &lt;slackNotifier&gt;
+        &lt;slackNotifier postSuccessful="true" postFailed="false" postStarted="false" &gt;
             &lt;slackWebToken&gt;testToken2&lt;/slackWebToken&gt;
             &lt;slackDefaultChannel&gt;#testing&lt;/slackDefaultChannel&gt;
             &lt;slackPostUrl&gt;https://tapadoo.slack.com/services/hooks/incoming-webhook?token=&lt;/slackPostUrl&gt;
