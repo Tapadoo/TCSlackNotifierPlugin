@@ -112,7 +112,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         message = String.format("Project '%s' build failed! ( %s )" , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
 
-        postToSlack(build, message, true);
+        postToSlack(build, message, false);
     }
 
     private void processSuccessfulBuild(SRunningBuild build) {
