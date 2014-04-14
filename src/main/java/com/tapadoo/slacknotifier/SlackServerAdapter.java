@@ -61,7 +61,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
     public void buildStarted(SRunningBuild build) {
         super.buildStarted(build);
 
-        if( !build.isPersonal() )
+        if( !build.isPersonal() && slackConfig.postStarted() )
         {
             postStartedBuild(build);
         }
