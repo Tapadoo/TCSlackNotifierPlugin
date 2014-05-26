@@ -2,7 +2,7 @@
 
 A plugin for [TeamCity](http://www.jetbrains.com/teamcity/) to post notifications to [slack](https://slack.com/)
 
-It works by registering as a server listener, and posts to slack on successful builds finishing.
+It works by registering as a server listener, and posts to slack on build events like successful builds (optionally also builds starting and failing)
 
 #Build Plugin
 
@@ -30,10 +30,11 @@ Add a new webhook integration. Make a note of the Token.
 ###In TeamCity
 
 Edit the main config file, usually `.BuildServer/config/main-config.xml` and add an element like so:
+
 ```
 <server rootURL="http://localhost:8111">
   ...
-  <slackNotifier>
+  <slackNotifier postSuccessful="true" postFailed="false" postStarted="false" >
     <slackWebToken>testToken2</slackWebToken>
     <slackDefaultChannel>#general</slackDefaultChannel>
     <slackPostUrl>https://tapadoo.slack.com/services/hooks/incoming-webhook?token=</slackPostUrl>
@@ -42,6 +43,8 @@ Edit the main config file, usually `.BuildServer/config/main-config.xml` and add
   ...
   ...
 ```
+
+You can set the attributes on slackNotifier element (postSuccessful,postFailed,postStarted) to decide that notifications you would like posted.
 
 Replace the web token with the token from slack. Change the postUrl also to point to the right slack team. The url can be found in the webhook integraton page, just remove the token from the end. Change the logo url whatever you want.
 
@@ -62,7 +65,7 @@ Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere in
 
 #Note on TeamCity version support
 
-I'm still using **TeamCity 7.1** , but a quick test on the free version of TeamCity 8 went ok
+I'm still using **TeamCity 7.1** , but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also.
 
 ###Issues
 
