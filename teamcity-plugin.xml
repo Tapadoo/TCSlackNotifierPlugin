@@ -4,7 +4,7 @@
     <info>
         <name>slackNotifier</name> <!-- the name of plugin used in teamcity -->
         <display-name>Slack Notifier</display-name>
-        <version>2.2.0-beta</version>
+        <version>2.2.0</version>
         <description>Post build success notifications to Slack</description>
         <vendor>
             <name>Tapadoo</name>
