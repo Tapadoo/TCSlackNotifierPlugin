@@ -176,7 +176,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
             attachment.addProperty("color",( goodColor ? "good" : "danger"));
 
             JsonArray fields = new JsonArray();
-            fields.add(shortAttachmentField("Build number", String.format("%s <%s|(build log)>", build.getBuildNumber(), linkToBuildLog(build))));
+            fields.add(shortAttachmentField("Build number", String.format("%s    (<%s|build log>)", build.getBuildNumber(), linkToBuildLog(build))));
             fields.add(shortAttachmentField("Run time", formatBuildDuration(build)));
 
             if( commitMsg.length() > 0 )
