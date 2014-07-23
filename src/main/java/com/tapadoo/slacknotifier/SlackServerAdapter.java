@@ -8,6 +8,7 @@ import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.settings.ProjectSettingsManager;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.users.UserSet;
+import jetbrains.buildServer.messages.Status;
 import jetbrains.buildServer.vcs.SelectPrevBuildPolicy;
 import jetbrains.buildServer.vcs.VcsRoot;
 import org.joda.time.Duration;
@@ -71,17 +72,30 @@ public class SlackServerAdapter extends BuildServerAdapter {
     public void buildFinished(SRunningBuild build) {
         super.buildFinished(build);
 
-        if( !build.isPersonal() && build.getBuildStatus().isSuccessful() && slackConfig.postSuccessful() )
+        boolean isPersonalBuild = build.isPersonal();
+        Status buildStatus = build.getBuildStatus();
+
+        if ( !isPersonalBuild )
         {
-            processSuccessfulBuild(build);
-        }
-        else if ( !build.isPersonal() && build.getBuildStatus().isFailed() && slackConfig.postFailed() )
-        {
+          if( buildStatus.isSuccessful() && slackConfig.postSuccessful() )
+          {
+              processSuccessfulBuild(build);
+          }
+          else if ( buildStatus.isFailed() && slackConfig.postFailed() )
+          {
             postFailureBuild(build);
+          }
+          else
+          {
+            //TODO - modify in future if we care about other states
+          }
         }
         else
         {
-            //TODO - modify in future if we care about other states
+          if ( ( buildStatus.isSuccessful() || buildStatus.isFailed() ) )
+          {
+            postPersonalBuild(build);
+          }
         }
     }
 
@@ -93,13 +107,66 @@ public class SlackServerAdapter extends BuildServerAdapter {
     }
 
     private void postFailureBuild(SRunningBuild build ) {
-        String message = String.format("[%s]  Build failed!" , build.getFullName());
-        postToSlack(build, message, false);
+        postToSlack(build);
     }
 
     private void processSuccessfulBuild(SRunningBuild build) {
-        String message = String.format("[%s] Build succeeded." , build.getFullName());
-        postToSlack(build, message, true);
+        postToSlack(build);
+    }
+
+    private void postPersonalBuild(SRunningBuild build) {
+        postToSlack(build);
+    }
+
+    private String messageFor(SRunningBuild build) {
+        String statusString = build.getBuildStatus().isSuccessful() ? "succeeded.": "failed!";
+        return String.format("[%s] Build %s (<%s|build log>)", build.getFullName(), statusString, linkToBuildLog(build));
+    }
+
+    private SlackProjectSettings getSlackSettings(SRunningBuild  build) {
+        return (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(),"slackSettings");
+    }
+
+    /**
+     * Get the channel for this build message. Precedence goes: channel in SLACK_CHANNEL parameter,
+     * @username if personal and no SLACK_CHANNEL, channel from project-specific config, then channel
+     * from global notifier config. 
+     */ 
+    private String channelFor(SRunningBuild build) {
+        String channel = this.slackConfig.getDefaultChannel();
+
+        String configuredChannel = build.getParametersProvider().get("SLACK_CHANNEL");
+        if ( configuredChannel != null && configuredChannel.length() > 0 ) {
+            channel = configuredChannel;
+        }
+        else {
+            if ( build.isPersonal() ) {
+                channel = String.format("@%s", build.getOwner().getUsername());
+            }
+            else {
+                SlackProjectSettings projectSettings = getSlackSettings(build);
+                if ( projectSettings != null ) {
+                    String projectChannel = projectSettings.getChannel();
+                    if ( projectChannel != null && projectChannel.length() > 0 ) {
+                        channel = projectChannel;
+                    }
+                }
+            }
+        }
+
+        return channel;
+    }
+
+    private void postToSlack(SRunningBuild build) {
+        postToSlack(build, messageFor(build), channelFor(build), build.getBuildStatus().isSuccessful());
+    }
+ 
+    private void postToSlack(SRunningBuild build, boolean goodColor) {
+        postToSlack(build, messageFor(build), channelFor(build), goodColor); 
+    }
+
+    private void postToSlack(SRunningBuild build, String message, boolean goodColor) {
+        postToSlack(build, message, channelFor(build), goodColor);
     }
 
     /**
@@ -107,32 +174,20 @@ public class SlackServerAdapter extends BuildServerAdapter {
      * to the build log are automatically added as an attachment
      * @param build the build the message is relating to
      * @param message main message to include, 'Build X completed...' etc
+     * @param channel slack channel to post to
      * @param goodColor true for 'good' builds, false for danger.
      */
-    private void postToSlack(SRunningBuild build, String message, boolean goodColor) {
+    private void postToSlack(SRunningBuild build, String message, String channel, boolean goodColor) {
         try{
-
             String finalUrl = slackConfig.getPostUrl() + slackConfig.getToken();
             URL url = new URL(finalUrl);
 
 
-            SlackProjectSettings projectSettings = (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(),"slackSettings");
+            SlackProjectSettings projectSettings = getSlackSettings(build);
 
             if( ! projectSettings.isEnabled() )
             {
                 return ;
-            }
-
-            String configuredChannel = build.getParametersProvider().get("SLACK_CHANNEL");
-            String channel = this.slackConfig.getDefaultChannel();
-
-            if( configuredChannel != null && configuredChannel.length() > 0 )
-            {
-                channel = configuredChannel ;
-            }
-            else if( projectSettings != null && projectSettings.getChannel() != null && projectSettings.getChannel().length() > 0 )
-            {
-                channel = projectSettings.getChannel() ;
             }
 
             UserSet<SUser> commiters = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
@@ -176,7 +231,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
             attachment.addProperty("color",( goodColor ? "good" : "danger"));
 
             JsonArray fields = new JsonArray();
-            fields.add(shortAttachmentField("Build number", String.format("%s    (<%s|build log>)", build.getBuildNumber(), linkToBuildLog(build))));
             fields.add(shortAttachmentField("Run time", formatBuildDuration(build)));
 
             if( commitMsg.length() > 0 )
