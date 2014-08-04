@@ -110,7 +110,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         Duration buildDuration = new Duration(1000*build.getDuration());
 
-        message = String.format("Project '%s' build failed! ( %s )" , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
+        message = String.format("Project '%s' (%s) build failed! (%s)" , build.getFullName(), build.getBranch().getDisplayName(), durationFormatter.print(buildDuration.toPeriod()));
 
         postToSlack(build, message, false);
     }
@@ -134,7 +134,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         Duration buildDuration = new Duration(1000*build.getDuration());
 
-        message = String.format("Project '%s' built successfully in %s." , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
+        message = String.format("Project '%s' (%s) built successfully in %s." , build.getFullName(), build.getBranch().getDisplayName(), durationFormatter.print(buildDuration.toPeriod()));
 
         postToSlack(build, message, true);
     }
