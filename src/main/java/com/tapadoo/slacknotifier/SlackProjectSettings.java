@@ -10,6 +10,9 @@ import org.jdom.Element;
  */
 public class SlackProjectSettings implements ProjectSettings {
 
+    public static final String ELEMENT_LOGO_URL = "logoUrl";
+    public static final String ATTR_ENABLED = "enabled";
+    public static final String ELEMENT_CHANNEL = "channel";
     private String projectId;
     private String channel;
     private String logoUrl;
@@ -50,9 +53,9 @@ public class SlackProjectSettings implements ProjectSettings {
     }
 
     public void readFrom(Element element) {
-        Element channelElement = element.getChild("channel");
-        Element logoElement = element.getChild("logo");
-        Attribute enabledAttr = element.getAttribute("enabled");
+        Element channelElement = element.getChild(ELEMENT_CHANNEL);
+        Element logoElement = element.getChild(ELEMENT_LOGO_URL);
+        Attribute enabledAttr = element.getAttribute(ATTR_ENABLED);
 
         if( enabledAttr != null )
         {
@@ -79,13 +82,13 @@ public class SlackProjectSettings implements ProjectSettings {
 
     public void writeTo(Element element) {
 
-        Element channelElement = new Element("channel");
+        Element channelElement = new Element(ELEMENT_CHANNEL);
         channelElement.setText(this.channel);
 
-        Element logoUrlElement = new Element("logoUrl");
+        Element logoUrlElement = new Element(ELEMENT_LOGO_URL);
         logoUrlElement.setText(this.logoUrl);
 
-        Attribute enabledAttr = new Attribute("enabled",Boolean.toString(enabled)) ;
+        Attribute enabledAttr = new Attribute(ATTR_ENABLED,Boolean.toString(enabled)) ;
         element.setAttribute( enabledAttr );
 
         element.addContent(channelElement);

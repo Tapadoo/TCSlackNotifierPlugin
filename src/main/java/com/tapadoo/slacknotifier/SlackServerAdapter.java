@@ -142,7 +142,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
     }
 
     /**
-     * Post a payload to slack with a message and good/bad color. Commiter summary is automatically added as an attachment
+     * Post a payload to slack with a message and good/bad color. Committer summary is automatically added as an attachment
      * @param build the build the message is relating to
      * @param message main message to include, 'Build X completed...' etc
      * @param goodColor true for 'good' builds, false for danger.
