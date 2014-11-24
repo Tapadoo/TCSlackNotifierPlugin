@@ -6,7 +6,7 @@ repositories {
 apply plugin: 'java'
 
 
-sourceCompatibility = 1.5
+sourceCompatibility = 1.6
 version = '2.4.1b'
 
 configurations {

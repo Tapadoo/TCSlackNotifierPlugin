@@ -150,9 +150,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
     private void postToSlack(SRunningBuild build, String message, boolean goodColor) {
         try{
 
-            String finalUrl = slackConfig.getPostUrl() + slackConfig.getToken();
-            URL url = new URL(finalUrl);
-
+            URL url = new URL(slackConfig.getPostUrl());
 
             SlackProjectSettings projectSettings = (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(),"slackSettings");
 

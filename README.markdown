@@ -35,9 +35,8 @@ Edit the main config file, usually `.BuildServer/config/main-config.xml` and add
 <server rootURL="http://localhost:8111">
   ...
   <slackNotifier postSuccessful="true" postFailed="false" postStarted="false" >
-    <slackWebToken>testToken2</slackWebToken>
     <slackDefaultChannel>#general</slackDefaultChannel>
-    <slackPostUrl>https://tapadoo.slack.com/services/hooks/incoming-webhook?token=</slackPostUrl>
+    <slackPostUrl>https://hooks.slack.com/services/YYYYYY/XXXXXXX/ZZZZZZZZZZZZ</slackPostUrl>
     <slackLogoUrl>http://build.tapadoo.com/img/icons/TeamCity32.png</slackLogoUrl>
   </slackNotifier>
   ...
@@ -46,19 +45,20 @@ Edit the main config file, usually `.BuildServer/config/main-config.xml` and add
 
 You can set the attributes on slackNotifier element (postSuccessful,postFailed,postStarted) to decide that notifications you would like posted.
 
-Replace the web token with the token from slack. Change the postUrl also to point to the right slack team. The url can be found in the webhook integraton page, just remove the token from the end. Change the logo url whatever you want.
+Set the slackPostUrl to point to the url provided on the Slack integration page for the incoming webhook you created. Change the logo url whatever you want.
 
 This by default will post all builds to slack. you can tweak these on a project level though
 
 ####Project Config (Optional)
 
-To change channel or disable per project:
+To change channel, change the slack logo used for that project or disable per project:
 
 Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere inside `.BuildServer/config/projects/PROJECTNAME`
 ```
 <settings>
   <slackSettings enabled="true">
     <channel>#blah</channel>
+    <logoUrl>http://host/somelogo.png</logoUrl>
   </slackSettings>
 </settings>
 ```
