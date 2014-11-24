@@ -247,16 +247,30 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 JsonObject issuesAttachment = new JsonObject();
 
                 StringBuilder issueIds = new StringBuilder();
+                StringBuilder clickableIssueIds = new StringBuilder();
 
                 for( Issue issue : issues )
                 {
                     issueIds.append(',');
                     issueIds.append(issue.getId());
+
+                    clickableIssueIds.append(',');
+
+                    clickableIssueIds.append('<');
+                    clickableIssueIds.append(issue.getUrl());
+                    clickableIssueIds.append('|');
+                    clickableIssueIds.append(issue.getId());
+                    clickableIssueIds.append('>');
                 }
 
                 if( issueIds.length() > 0 )
                 {
-                    issueIds.deleteCharAt(0); //delete first ,
+                    issueIds.deleteCharAt(0); //delete first ','
+                }
+
+                if( clickableIssueIds.length() > 0 )
+                {
+                    clickableIssueIds.deleteCharAt(0); //delete first ','
                 }
 
                 issuesAttachment.addProperty("fallback" , "Issues " + issueIds.toString());
@@ -265,11 +279,11 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 JsonObject field = new JsonObject() ;
 
                 field.addProperty("title","Related Issues");
-                field.addProperty("value",issueIds.toString());
+                field.addProperty("value",clickableIssueIds.toString());
                 field.addProperty("short", true);
 
                 fields.add(field);
-                issuesAttachment.add("fields",fields);
+                issuesAttachment.add("fields", fields);
 
                 attachmentsObj.add(issuesAttachment);
             }
