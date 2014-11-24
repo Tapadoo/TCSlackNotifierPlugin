@@ -180,22 +180,22 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 channel = projectSettings.getChannel() ;
             }
 
-            UserSet<SUser> commiters = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
+            UserSet<SUser> committers = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
             StringBuilder committersString = new StringBuilder();
 
-            for( SUser commiter : commiters.getUsers() )
+            for( SUser committer : committers.getUsers() )
             {
-                if( commiter != null)
+                if( committer != null)
                 {
-                    String commiterName = commiter.getName() ;
-                    if( commiterName == null || commiterName.equals("") )
+                    String committerName = committer.getName() ;
+                    if( committerName == null || committerName.equals("") )
                     {
-                        commiterName = commiter.getUsername() ;
+                        committerName = committer.getUsername() ;
                     }
 
-                    if( commiterName != null && !commiterName.equals(""))
+                    if( committerName != null && !committerName.equals(""))
                     {
-                        committersString.append(commiterName);
+                        committersString.append(committerName);
                         committersString.append(",");
                     }
                 }
@@ -274,6 +274,8 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 }
 
                 issuesAttachment.addProperty("fallback" , "Issues " + issueIds.toString());
+                //Not sure what color, if any to use for this. For now, leave it the same as the committers one
+                issuesAttachment.addProperty("color",( goodColor ? "good" : "danger"));
 
                 JsonArray fields = new JsonArray();
                 JsonObject field = new JsonObject() ;
