@@ -12,6 +12,7 @@ public class SlackProjectSettings implements ProjectSettings {
 
     private String projectId;
     private String channel;
+    private String logoUrl;
     private boolean enabled = true ;
 
     public SlackProjectSettings(String projectId) {
@@ -31,6 +32,14 @@ public class SlackProjectSettings implements ProjectSettings {
         this.channel = channel;
     }
 
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
     public boolean isEnabled()
     {
         return this.enabled;
@@ -42,6 +51,7 @@ public class SlackProjectSettings implements ProjectSettings {
 
     public void readFrom(Element element) {
         Element channelElement = element.getChild("channel");
+        Element logoElement = element.getChild("logo");
         Attribute enabledAttr = element.getAttribute("enabled");
 
         if( enabledAttr != null )
@@ -60,6 +70,11 @@ public class SlackProjectSettings implements ProjectSettings {
         if( channelElement != null ) {
             this.channel = channelElement.getText();
         }
+
+        if( logoElement != null )
+        {
+            this.logoUrl = logoElement.getText();
+        }
     }
 
     public void writeTo(Element element) {
@@ -67,10 +82,14 @@ public class SlackProjectSettings implements ProjectSettings {
         Element channelElement = new Element("channel");
         channelElement.setText(this.channel);
 
+        Element logoUrlElement = new Element("logoUrl");
+        logoUrlElement.setText(this.logoUrl);
+
         Attribute enabledAttr = new Attribute("enabled",Boolean.toString(enabled)) ;
         element.setAttribute( enabledAttr );
 
         element.addContent(channelElement);
+        element.addContent(logoUrlElement);
     }
 
 }

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import jetbrains.buildServer.issueTracker.Issue;
 import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.settings.ProjectSettingsManager;
 import jetbrains.buildServer.users.SUser;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 
 
 /**
@@ -159,8 +161,12 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 return ;
             }
 
+            String iconUrl = projectSettings.getLogoUrl();
 
-
+            if(iconUrl == null || iconUrl.length() < 1 )
+            {
+                iconUrl = slackConfig.getLogoUrl() ;
+            }
 
             String configuredChannel = build.getParametersProvider().get("SLACK_CHANNEL");
             String channel = this.slackConfig.getDefaultChannel();
@@ -207,11 +213,12 @@ public class SlackServerAdapter extends BuildServerAdapter {
             payloadObj.addProperty("channel" , channel);
             payloadObj.addProperty("username" , "TeamCity");
             payloadObj.addProperty("text", message);
-            payloadObj.addProperty("icon_url",slackConfig.getLogoUrl());
+            payloadObj.addProperty("icon_url",iconUrl);
+
+            JsonArray attachmentsObj = new JsonArray();
 
             if( commitMsg.length() > 0 )
             {
-                JsonArray attachmentsObj = new JsonArray();
                 JsonObject attachment = new JsonObject();
 
                 attachment.addProperty("fallback", "Changes by"+ commitMsg);
@@ -222,15 +229,53 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
                 field.addProperty("title","Changes By");
                 field.addProperty("value",commitMsg);
-                field.addProperty("short", false);
+                field.addProperty("short", true);
 
                 fields.add(field);
                 attachment.add("fields",fields);
 
                 attachmentsObj.add(attachment);
 
-                //Could put other into here as attachments. Agents maybe? No point?
-                payloadObj.add("attachments" , attachmentsObj);
+            }
+
+            //Do we have any issues?
+
+            if( build.isHasRelatedIssues() )
+            {
+                //We do!
+                Collection<Issue> issues = build.getRelatedIssues();
+                JsonObject issuesAttachment = new JsonObject();
+
+                StringBuilder issueIds = new StringBuilder();
+
+                for( Issue issue : issues )
+                {
+                    issueIds.append(',');
+                    issueIds.append(issue.getId());
+                }
+
+                if( issueIds.length() > 0 )
+                {
+                    issueIds.deleteCharAt(0); //delete first ,
+                }
+
+                issuesAttachment.addProperty("fallback" , "Issues " + issueIds.toString());
+
+                JsonArray fields = new JsonArray();
+                JsonObject field = new JsonObject() ;
+
+                field.addProperty("title","Related Issues");
+                field.addProperty("value",issueIds.toString());
+                field.addProperty("short", true);
+
+                fields.add(field);
+                issuesAttachment.add("fields",fields);
+
+                attachmentsObj.add(issuesAttachment);
+            }
+
+            if( attachmentsObj.size() > 0 ) {
+                payloadObj.add("attachments", attachmentsObj);
             }
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
