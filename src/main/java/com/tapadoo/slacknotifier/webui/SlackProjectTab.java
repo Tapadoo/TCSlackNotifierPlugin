@@ -38,12 +38,16 @@ public class SlackProjectTab extends ProjectTab {
 
         String channel = slackConfigProcessor.getDefaultChannel() ;
         boolean enabled = true ;
+        String logoUrl = "" ;
 
         if( slackProjectSettings != null && slackProjectSettings.getChannel() != null && slackProjectSettings.getChannel().length() > 0 )
         {
             channel = slackProjectSettings.getChannel() ;
         }
-
+        if( slackProjectSettings != null && slackProjectSettings.getLogoUrl() != null && slackProjectSettings.getLogoUrl().length() > 0 )
+        {
+            logoUrl = slackProjectSettings.getLogoUrl();
+        }
         if( slackProjectSettings != null )
         {
             enabled = slackProjectSettings.isEnabled();
@@ -52,6 +56,7 @@ public class SlackProjectTab extends ProjectTab {
         model.put("configDir" , sProject.getConfigDirectory().toString());
         model.put("channel" , channel );
         model.put("enabled" , enabled );
+        model.put("logoUrl" , logoUrl );
 
     }
 }

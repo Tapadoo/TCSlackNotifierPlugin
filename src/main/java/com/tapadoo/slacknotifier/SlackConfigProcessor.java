@@ -10,7 +10,6 @@ import org.jdom.Element;
  */
 public class SlackConfigProcessor implements MainConfigProcessor {
 
-    public static final String PREF_KEY_SLACK_WEB_TOKEN = "slackWebToken";
     public static final String PREF_KEY_SLACK_DEF_CHANNEL = "slackDefaultChannel";
     public static final String PREF_KEY_SLACK_POSTURL = "slackPostUrl";
     public static final String PREF_KEY_SLACK_LOGOURL = "slackLogoUrl";
@@ -21,8 +20,6 @@ public class SlackConfigProcessor implements MainConfigProcessor {
     private static final java.lang.String ATTR_NAME_POST_STARTED = "postStarted" ;
     private static final java.lang.String ATTR_NAME_POST_FAILED = "postFailed" ;
 
-
-    private String token = "invalidToken";
     private String defaultChannel = "#general";
     private String postUrl;
     private String logoUrl;
@@ -56,14 +53,6 @@ public class SlackConfigProcessor implements MainConfigProcessor {
         return postStarted ;
     }
 
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
     public String getDefaultChannel() {
         return defaultChannel;
     }
@@ -93,12 +82,10 @@ public class SlackConfigProcessor implements MainConfigProcessor {
 
         if( mainConfigElement == null )
         {
-            token = "" ;
-            postUrl = "http://localhost/?token=" ;
+            postUrl = "http://localhost/" ;
             return ;
         }
 
-        token = mainConfigElement.getChildText(PREF_KEY_SLACK_WEB_TOKEN);
         defaultChannel = mainConfigElement.getChildText(PREF_KEY_SLACK_DEF_CHANNEL);
         postUrl = mainConfigElement.getChildText(PREF_KEY_SLACK_POSTURL);
         logoUrl = mainConfigElement.getChildText(PREF_KEY_SLACK_LOGOURL);
@@ -145,15 +132,12 @@ public class SlackConfigProcessor implements MainConfigProcessor {
     public void writeTo(org.jdom.Element element) {
 
         Element mainConfigElement = new Element(PREF_CHILD_ELEMENT);
-        Element webTokenElement = new Element(PREF_KEY_SLACK_WEB_TOKEN);
         Element defChannelElement = new Element(PREF_KEY_SLACK_DEF_CHANNEL);
         Element postUrlElement = new Element(PREF_KEY_SLACK_POSTURL);
         Element logoUrlElement = new Element(PREF_KEY_SLACK_LOGOURL);
 
-        webTokenElement.setText(token);
         defChannelElement.setText(defaultChannel);
 
-        mainConfigElement.addContent(webTokenElement);
         mainConfigElement.addContent(defChannelElement);
         mainConfigElement.addContent(postUrlElement);
         mainConfigElement.addContent(logoUrlElement);

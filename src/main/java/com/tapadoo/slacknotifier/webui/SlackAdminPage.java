@@ -41,7 +41,6 @@ public class SlackAdminPage extends AdminPage {
     public void fillModel(Map<String, Object> model, HttpServletRequest request) {
         super.fillModel(model, request);
 
-        model.put("currentWebToken" , configProcesser.getToken());
         model.put("defaultChannel" , configProcesser.getDefaultChannel());
         model.put("logoUrl" , configProcesser.getLogoUrl());
         model.put("postUrl" , configProcesser.getPostUrl());

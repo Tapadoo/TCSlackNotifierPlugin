@@ -1,17 +1,12 @@
 <h1>Slack Admin</h1>
 
 <p>
-    <b>Web Hook Token</b> : ${currentWebToken}
-</p>
-
-
-<p>
     <b>Default Channel</b> : ${defaultChannel}
 </p>
 
 <p>
     <b>Post URL :</b> ${postUrl}</br>
-    <b>Logo URL :</b> ${logoUrl}</br>
+    <b>Default Logo URL :</b> ${logoUrl}</br>
 </p>
 
 <h2>Configuration</h2>
@@ -21,9 +16,8 @@
     &lt;server rootURL="http://localhost:8111"&gt;
         ...
         &lt;slackNotifier postSuccessful="true" postFailed="false" postStarted="false" &gt;
-            &lt;slackWebToken&gt;testToken2&lt;/slackWebToken&gt;
             &lt;slackDefaultChannel&gt;#testing&lt;/slackDefaultChannel&gt;
-            &lt;slackPostUrl&gt;https://tapadoo.slack.com/services/hooks/incoming-webhook?token=&lt;/slackPostUrl&gt;
+            &lt;slackPostUrl&gt;https://hooks.slack.com/services/XXXXXXX/XXXXX/XXXXXXXX&lt;/slackPostUrl&gt;
             &lt;slackLogoUrl&gt;http://build.tapadoo.com/img/icons/TeamCity32.png&lt;/slackLogoUrl&gt;
         &lt;/slackNotifier&gt;
         ...

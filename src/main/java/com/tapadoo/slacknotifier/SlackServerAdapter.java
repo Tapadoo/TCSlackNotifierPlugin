@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import jetbrains.buildServer.issueTracker.Issue;
 import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.settings.ProjectSettingsManager;
 import jetbrains.buildServer.users.SUser;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 
 
 /**
@@ -140,7 +142,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
     }
 
     /**
-     * Post a payload to slack with a message and good/bad color. Commiter summary is automatically added as an attachment
+     * Post a payload to slack with a message and good/bad color. Committer summary is automatically added as an attachment
      * @param build the build the message is relating to
      * @param message main message to include, 'Build X completed...' etc
      * @param goodColor true for 'good' builds, false for danger.
@@ -148,9 +150,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
     private void postToSlack(SRunningBuild build, String message, boolean goodColor) {
         try{
 
-            String finalUrl = slackConfig.getPostUrl() + slackConfig.getToken();
-            URL url = new URL(finalUrl);
-
+            URL url = new URL(slackConfig.getPostUrl());
 
             SlackProjectSettings projectSettings = (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(),"slackSettings");
 
@@ -159,8 +159,12 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 return ;
             }
 
+            String iconUrl = projectSettings.getLogoUrl();
 
-
+            if(iconUrl == null || iconUrl.length() < 1 )
+            {
+                iconUrl = slackConfig.getLogoUrl() ;
+            }
 
             String configuredChannel = build.getParametersProvider().get("SLACK_CHANNEL");
             String channel = this.slackConfig.getDefaultChannel();
@@ -174,22 +178,22 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 channel = projectSettings.getChannel() ;
             }
 
-            UserSet<SUser> commiters = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
+            UserSet<SUser> committers = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
             StringBuilder committersString = new StringBuilder();
 
-            for( SUser commiter : commiters.getUsers() )
+            for( SUser committer : committers.getUsers() )
             {
-                if( commiter != null)
+                if( committer != null)
                 {
-                    String commiterName = commiter.getName() ;
-                    if( commiterName == null || commiterName.equals("") )
+                    String committerName = committer.getName() ;
+                    if( committerName == null || committerName.equals("") )
                     {
-                        commiterName = commiter.getUsername() ;
+                        committerName = committer.getUsername() ;
                     }
 
-                    if( commiterName != null && !commiterName.equals(""))
+                    if( committerName != null && !committerName.equals(""))
                     {
-                        committersString.append(commiterName);
+                        committersString.append(committerName);
                         committersString.append(",");
                     }
                 }
@@ -207,11 +211,12 @@ public class SlackServerAdapter extends BuildServerAdapter {
             payloadObj.addProperty("channel" , channel);
             payloadObj.addProperty("username" , "TeamCity");
             payloadObj.addProperty("text", message);
-            payloadObj.addProperty("icon_url",slackConfig.getLogoUrl());
+            payloadObj.addProperty("icon_url",iconUrl);
+
+            JsonArray attachmentsObj = new JsonArray();
 
             if( commitMsg.length() > 0 )
             {
-                JsonArray attachmentsObj = new JsonArray();
                 JsonObject attachment = new JsonObject();
 
                 attachment.addProperty("fallback", "Changes by"+ commitMsg);
@@ -222,15 +227,69 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
                 field.addProperty("title","Changes By");
                 field.addProperty("value",commitMsg);
-                field.addProperty("short", false);
+                field.addProperty("short", true);
 
                 fields.add(field);
                 attachment.add("fields",fields);
 
                 attachmentsObj.add(attachment);
 
-                //Could put other into here as attachments. Agents maybe? No point?
-                payloadObj.add("attachments" , attachmentsObj);
+            }
+
+            //Do we have any issues?
+
+            if( build.isHasRelatedIssues() )
+            {
+                //We do!
+                Collection<Issue> issues = build.getRelatedIssues();
+                JsonObject issuesAttachment = new JsonObject();
+
+                StringBuilder issueIds = new StringBuilder();
+                StringBuilder clickableIssueIds = new StringBuilder();
+
+                for( Issue issue : issues )
+                {
+                    issueIds.append(',');
+                    issueIds.append(issue.getId());
+
+                    clickableIssueIds.append(',');
+
+                    clickableIssueIds.append('<');
+                    clickableIssueIds.append(issue.getUrl());
+                    clickableIssueIds.append('|');
+                    clickableIssueIds.append(issue.getId());
+                    clickableIssueIds.append('>');
+                }
+
+                if( issueIds.length() > 0 )
+                {
+                    issueIds.deleteCharAt(0); //delete first ','
+                }
+
+                if( clickableIssueIds.length() > 0 )
+                {
+                    clickableIssueIds.deleteCharAt(0); //delete first ','
+                }
+
+                issuesAttachment.addProperty("fallback" , "Issues " + issueIds.toString());
+                //Not sure what color, if any to use for this. For now, leave it the same as the committers one
+                issuesAttachment.addProperty("color",( goodColor ? "good" : "danger"));
+
+                JsonArray fields = new JsonArray();
+                JsonObject field = new JsonObject() ;
+
+                field.addProperty("title","Related Issues");
+                field.addProperty("value",clickableIssueIds.toString());
+                field.addProperty("short", true);
+
+                fields.add(field);
+                issuesAttachment.add("fields", fields);
+
+                attachmentsObj.add(issuesAttachment);
+            }
+
+            if( attachmentsObj.size() > 0 ) {
+                payloadObj.add("attachments", attachmentsObj);
             }
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
