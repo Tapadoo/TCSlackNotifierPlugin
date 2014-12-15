@@ -10,14 +10,14 @@ Gradle is used to build. Wrapper is included in the project so you dont need to 
 
     ./gradlew buildZip
 
-this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-<version>.zip`
+this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-<version>.zip` you can also download a build from GitHubs versions section.
 
 #Install Plugin
 
 Copy the zip file into TeamCity plugin directory inside the data directory, usually `.BuildServer`
 
 ```
-scp build/distributions/TCSlackNotifierPlugin-<version>.zip buildserver:.BuildServer/plugins/slackNotifier.zip
+scp build/distributions/TCSlackNotifierPlugin-<version>.zip buildserver:.BuildServer/plugins/
 ```
 
 Then restart TeamCity.
@@ -25,7 +25,7 @@ Then restart TeamCity.
 #Configuration
 
 ###In slack
-Add a new webhook integration. Make a note of the Token.
+Add a new webhook integration. Make a note of the URL.
 
 ###In TeamCity
 
@@ -45,7 +45,7 @@ Edit the main config file, usually `.BuildServer/config/main-config.xml` and add
 
 You can set the attributes on slackNotifier element (postSuccessful,postFailed,postStarted) to decide that notifications you would like posted.
 
-Set the slackPostUrl to point to the url provided on the Slack integration page for the incoming webhook you created. Change the logo url whatever you want.
+Set the **slackPostUrl** to point to the url provided on the Slack integration page for the incoming webhook you created. Change the logo url whatever you want or leave it out.
 
 This by default will post all builds to slack. you can tweak these on a project level though
 
@@ -54,6 +54,7 @@ This by default will post all builds to slack. you can tweak these on a project 
 To change channel, change the slack logo used for that project or disable per project:
 
 Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere inside `.BuildServer/config/projects/PROJECTNAME`
+
 ```
 <settings>
   <slackSettings enabled="true">
@@ -65,12 +66,12 @@ Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere in
 
 #Note on TeamCity version support
 
-I'm still using **TeamCity 7.1** , but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also.
+I'm still using **TeamCity 7.1** , but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also. Have yet to test on TeamCity 9 but whats the chance it doesn't work?
 
 ###Issues
 
 * all xml config - needs web ui extensions for updating settings from GUI. Considering it.
-* channel can be changed per-project either by environmental variable (SLACK_CHANNEL) or by changing the project specific xml in the data directory. This could also use web ui extension UI for editing.
+* channel can be changed per-project either by environmental variable (SLACK_CHANNEL (env var may be broken)) or by changing the project specific xml in the data directory. This could also use web ui extension UI for editing.
 * All or nothing notifications. By default, all builds are posted. It can be disabled per project, but not currently by build config.
 
 
