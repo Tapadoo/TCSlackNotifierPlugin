@@ -214,15 +214,16 @@ public class SlackServerAdapter extends BuildServerAdapter {
             payloadObj.addProperty("icon_url",iconUrl);
 
             JsonArray attachmentsObj = new JsonArray();
+            JsonObject attachment = null ;
+            JsonArray fields = new JsonArray();
+
+            StringBuilder fallbackMessage = new StringBuilder();
 
             if( commitMsg.length() > 0 )
             {
-                JsonObject attachment = new JsonObject();
+                attachment = new JsonObject();
+                attachmentsObj.add(attachment);
 
-                attachment.addProperty("fallback", "Changes by"+ commitMsg);
-                attachment.addProperty("color",( goodColor ? "good" : "danger"));
-
-                JsonArray fields = new JsonArray();
                 JsonObject field = new JsonObject() ;
 
                 field.addProperty("title","Changes By");
@@ -230,9 +231,10 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 field.addProperty("short", true);
 
                 fields.add(field);
-                attachment.add("fields",fields);
 
-                attachmentsObj.add(attachment);
+                fallbackMessage.append("Changes by ");
+                fallbackMessage.append(commitMsg);
+                fallbackMessage.append(" ");
 
             }
 
@@ -240,9 +242,14 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
             if( build.isHasRelatedIssues() )
             {
+
+                if( attachment == null )
+                {
+                    attachment = new JsonObject();
+                    attachmentsObj.add(attachment);
+                }
                 //We do!
                 Collection<Issue> issues = build.getRelatedIssues();
-                JsonObject issuesAttachment = new JsonObject();
 
                 StringBuilder issueIds = new StringBuilder();
                 StringBuilder clickableIssueIds = new StringBuilder();
@@ -271,21 +278,25 @@ public class SlackServerAdapter extends BuildServerAdapter {
                     clickableIssueIds.deleteCharAt(0); //delete first ','
                 }
 
-                issuesAttachment.addProperty("fallback" , "Issues " + issueIds.toString());
-                //Not sure what color, if any to use for this. For now, leave it the same as the committers one
-                issuesAttachment.addProperty("color",( goodColor ? "good" : "danger"));
+               JsonObject field = new JsonObject() ;
 
-                JsonArray fields = new JsonArray();
-                JsonObject field = new JsonObject() ;
-
-                field.addProperty("title","Related Issues");
+                field.addProperty("title", "Related Issues");
                 field.addProperty("value",clickableIssueIds.toString());
                 field.addProperty("short", true);
 
                 fields.add(field);
-                issuesAttachment.add("fields", fields);
 
-                attachmentsObj.add(issuesAttachment);
+                fallbackMessage.append("Related Issues ");
+                fallbackMessage.append(issueIds.toString());
+            }
+
+            if( attachment != null ) {
+                attachment.addProperty("color", (goodColor ? "good" : "danger"));
+            }
+
+            if( attachment != null && fields.size() > 0 )
+            {
+                attachment.add("fields",fields);
             }
 
             if( attachmentsObj.size() > 0 ) {
