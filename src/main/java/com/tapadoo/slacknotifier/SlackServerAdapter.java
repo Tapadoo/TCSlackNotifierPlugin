@@ -111,8 +111,13 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 .toFormatter();
 
         Duration buildDuration = new Duration(1000*build.getDuration());
+        
+        String buildFailedPermalink = this.slackConfig.getBuildFailedPermalink();
 
-        message = String.format("Project '%s' build failed! ( %s )" , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
+        if (buildFailedPermalink != "")
+            message = String.format("Project '%s' build failed! ( %s )\n%s" , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()), buildFailedPermalink);
+        else
+            message = String.format("Project '%s' build failed! ( %s )" , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
 
         postToSlack(build, message, false);
     }
