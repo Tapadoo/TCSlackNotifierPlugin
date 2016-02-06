@@ -38,6 +38,7 @@ Edit the main config file, usually `.BuildServer/config/main-config.xml` and add
     <slackDefaultChannel>#general</slackDefaultChannel>
     <slackPostUrl>https://hooks.slack.com/services/YYYYYY/XXXXXXX/ZZZZZZZZZZZZ</slackPostUrl>
     <slackLogoUrl>http://build.tapadoo.com/img/icons/TeamCity32.png</slackLogoUrl>
+    <buildFailedPermalink>http://build.tapadoo.com/viewLog.html?buildTypeId=XXXXXXX&amp;buildId=lastFinished</buildFailedPermalink>
   </slackNotifier>
   ...
   ...
