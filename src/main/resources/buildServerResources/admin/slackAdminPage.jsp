@@ -20,7 +20,7 @@
             &lt;slackDefaultChannel&gt;#testing&lt;/slackDefaultChannel&gt;
             &lt;slackPostUrl&gt;https://hooks.slack.com/services/XXXXXXX/XXXXX/XXXXXXXX&lt;/slackPostUrl&gt;
             &lt;slackLogoUrl&gt;http://build.tapadoo.com/img/icons/TeamCity32.png&lt;/slackLogoUrl&gt;
-	        &lt;buildFailedPermalink&gt;http://build.tapadoo.com/viewLog.html?buildTypeId=XXXXXXX&amp;buildId=lastFinished&lt;/buildFailedPermalink&gt;
+	        &lt;buildFailedPermalink&gt;http://build.tapadoo.com/viewLog.html?buildTypeId=XXXXXXX&amp;amp;buildId=lastFinished&lt;/buildFailedPermalink&gt;
         &lt;/slackNotifier&gt;
         ...
         ...
