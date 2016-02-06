@@ -64,7 +64,7 @@ public class SlackConfigProcessor implements MainConfigProcessor {
     }
 
     public String getBuildFailedPermalink(){
-        return this.buildFailedPermalink;
+        return buildFailedPermalink;
     }
 
     public void setBuildFailedPermalink(String permalink){

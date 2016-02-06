@@ -44,5 +44,6 @@ public class SlackAdminPage extends AdminPage {
         model.put("defaultChannel" , configProcesser.getDefaultChannel());
         model.put("logoUrl" , configProcesser.getLogoUrl());
         model.put("postUrl" , configProcesser.getPostUrl());
+        model.put("buildFailedPermalink", configProcessor.getBuildFailedPermalink());
     }
 }
