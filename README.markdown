@@ -65,6 +65,17 @@ Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere in
 </settings>
 ```
 
+Alternatively, you may also override the alert selections that were specified in main-config.xml:
+
+```
+<settings>
+  <slackSettings enabled="true" postSuccessful="false" postFailed="true" postStarted="false">
+    <channel>#blah</channel>
+    <logoUrl>http://host/somelogo.png</logoUrl>
+  </slackSettings>
+</settings>
+```
+
 #Note on TeamCity version support
 
 I'm still using **TeamCity 7.1** , but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also. Users have reported it working on version 9 also.
@@ -73,7 +84,8 @@ I'm still using **TeamCity 7.1** , but a few tests on the free version of TeamCi
 
 * all xml config - needs web ui extensions for updating settings from GUI. Considering it.
 * channel can be changed per-project either by environmental variable (SLACK_CHANNEL (env var may be broken)) or by changing the project specific xml in the data directory. This could also use web ui extension UI for editing.
-* All or nothing notifications. By default, all builds are posted. It can be disabled per project, but not currently by build config.
+
+* Project-level notification selection only.  Notification settings per individual build configuration are not supported.
 
 
 # License

@@ -13,17 +13,25 @@ public class SlackProjectSettings implements ProjectSettings {
     public static final String ELEMENT_LOGO_URL = "logoUrl";
     public static final String ATTR_ENABLED = "enabled";
     public static final String ELEMENT_CHANNEL = "channel";
+
+    private static final java.lang.String ATTR_NAME_POST_SUCCESSFUL = "postSuccessful";
+    private static final java.lang.String ATTR_NAME_POST_STARTED = "postStarted";
+    private static final java.lang.String ATTR_NAME_POST_FAILED = "postFailed";
+
     private String projectId;
     private String channel;
     private String logoUrl;
-    private boolean enabled = true ;
+
+    private boolean enabled = true;
+    private Boolean postSuccessful = null;
+    private Boolean postStarted = null;
+    private Boolean postFailed = null;
 
     public SlackProjectSettings(String projectId) {
-        this.projectId = projectId ;
+        this.projectId = projectId;
     }
 
-    public SlackProjectSettings()
-    {
+    public SlackProjectSettings() {
 
     }
 
@@ -43,10 +51,21 @@ public class SlackProjectSettings implements ProjectSettings {
         this.logoUrl = logoUrl;
     }
 
-    public boolean isEnabled()
-    {
+    public boolean isEnabled() {
         return this.enabled;
     }
+
+    public boolean postSuccessfulSet() { return this.postSuccessful != null;}
+
+    public boolean postSuccessfulEnabled() { return this.postSuccessful; }
+
+    public boolean postStartedSet() { return this.postStarted != null;}
+
+    public boolean postStartedEnabled() { return this.postStarted; }
+
+    public boolean postFailedSet() { return this.postFailed != null;}
+
+    public boolean postFailedEnabled() { return this.postFailed; }
 
     public void dispose() {
 
@@ -57,25 +76,20 @@ public class SlackProjectSettings implements ProjectSettings {
         Element logoElement = element.getChild(ELEMENT_LOGO_URL);
         Attribute enabledAttr = element.getAttribute(ATTR_ENABLED);
 
-        if( enabledAttr != null )
-        {
-            try {
-                enabled = enabledAttr.getBooleanValue() ;
-            } catch (DataConversionException e) {
-                enabled = true ;
-            }
-        }
-        else
-        {
-            enabled = true ;
-        }
+        Attribute postSuccessfulAttr = element.getAttribute(ATTR_NAME_POST_SUCCESSFUL);
+        Attribute postStartedAttr = element.getAttribute(ATTR_NAME_POST_STARTED);
+        Attribute postFailedAttr = element.getAttribute(ATTR_NAME_POST_FAILED);
 
-        if( channelElement != null ) {
+        enabled = tryGetBooleanAttributeValue(enabledAttr);
+        postSuccessful = tryGetBooleanAttributeValue(postSuccessfulAttr);
+        postFailed = tryGetBooleanAttributeValue(postFailedAttr);
+        postStarted = tryGetBooleanAttributeValue(postStartedAttr);
+
+        if (channelElement != null) {
             this.channel = channelElement.getText();
         }
 
-        if( logoElement != null )
-        {
+        if (logoElement != null) {
             this.logoUrl = logoElement.getText();
         }
     }
@@ -88,11 +102,32 @@ public class SlackProjectSettings implements ProjectSettings {
         Element logoUrlElement = new Element(ELEMENT_LOGO_URL);
         logoUrlElement.setText(this.logoUrl);
 
-        Attribute enabledAttr = new Attribute(ATTR_ENABLED,Boolean.toString(enabled)) ;
-        element.setAttribute( enabledAttr );
+        Attribute enabledAttr = new Attribute(ATTR_ENABLED, Boolean.toString(enabled));
+        element.setAttribute(enabledAttr);
+
+        Attribute postSuccessfulAttr = new Attribute(ATTR_NAME_POST_SUCCESSFUL, Boolean.toString(postSuccessful));
+        element.setAttribute(postSuccessfulAttr);
+
+        Attribute postFailedAttr = new Attribute(ATTR_NAME_POST_FAILED, Boolean.toString(postFailed));
+        element.setAttribute(postFailedAttr);
+
+        Attribute postStartedAttr = new Attribute(ATTR_NAME_POST_STARTED, Boolean.toString(postStarted));
+        element.setAttribute(postStartedAttr);
 
         element.addContent(channelElement);
         element.addContent(logoUrlElement);
+    }
+
+    private Boolean tryGetBooleanAttributeValue(Attribute attr) {
+        if (attr != null) {
+            try {
+                return attr.getBooleanValue();
+            } catch (DataConversionException e) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
 }
