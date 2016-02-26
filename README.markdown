@@ -65,7 +65,7 @@ Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere in
 </settings>
 ```
 
-You may also override the alert selections that were specified in main-config.xml:
+Alternatively, you may also override the alert selections that were specified in main-config.xml:
 
 ```
 <settings>

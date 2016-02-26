@@ -5,8 +5,6 @@ import org.jdom.Attribute;
 import org.jdom.DataConversionException;
 import org.jdom.Element;
 
-import javax.smartcardio.ATR;
-
 /**
  * Created by jasonconnery on 02/03/2014.
  */
