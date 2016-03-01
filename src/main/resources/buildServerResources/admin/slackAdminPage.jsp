@@ -7,6 +7,7 @@
 <p>
     <b>Post URL :</b> ${postUrl}</br>
     <b>Default Logo URL :</b> ${logoUrl}</br>
+    <b>Build Failed Permalink :</b> ${buildFailedPermalink}</br>
 </p>
 
 <h2>Configuration</h2>
@@ -19,6 +20,7 @@
             &lt;slackDefaultChannel&gt;#testing&lt;/slackDefaultChannel&gt;
             &lt;slackPostUrl&gt;https://hooks.slack.com/services/XXXXXXX/XXXXX/XXXXXXXX&lt;/slackPostUrl&gt;
             &lt;slackLogoUrl&gt;http://build.tapadoo.com/img/icons/TeamCity32.png&lt;/slackLogoUrl&gt;
+            &lt;buildFailedPermalink&gt;http://build.tapadoo.com/viewLog.html?buildTypeId=XXXXXXX&amp;amp;buildId=lastFinished&lt;/buildFailedPermalink&gt;
         &lt;/slackNotifier&gt;
         ...
         ...

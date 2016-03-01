@@ -5,14 +5,15 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import jetbrains.buildServer.issueTracker.Issue;
-import jetbrains.buildServer.serverSide.*;
+import jetbrains.buildServer.serverSide.BuildServerAdapter;
+import jetbrains.buildServer.serverSide.ProjectManager;
+import jetbrains.buildServer.serverSide.SBuildServer;
+import jetbrains.buildServer.serverSide.SRunningBuild;
 import jetbrains.buildServer.serverSide.settings.ProjectSettingsManager;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.users.UserSet;
 import jetbrains.buildServer.vcs.SelectPrevBuildPolicy;
-import jetbrains.buildServer.vcs.VcsRoot;
 import org.joda.time.Duration;
-import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
@@ -32,38 +33,41 @@ public class SlackServerAdapter extends BuildServerAdapter {
     private final SBuildServer buildServer;
     private final SlackConfigProcessor slackConfig;
     private final ProjectSettingsManager projectSettingsManager;
-    private final ProjectManager projectManager ;
-    private Gson gson ;
+    private final ProjectManager projectManager;
+    private Gson gson;
 
-    public SlackServerAdapter(SBuildServer sBuildServer, ProjectManager projectManager, ProjectSettingsManager projectSettingsManager , SlackConfigProcessor configProcessor) {
+    public SlackServerAdapter(SBuildServer sBuildServer, ProjectManager projectManager, ProjectSettingsManager projectSettingsManager, SlackConfigProcessor configProcessor) {
 
-        this.projectManager = projectManager ;
-        this.projectSettingsManager = projectSettingsManager ;
-        this.buildServer = sBuildServer ;
-        this.slackConfig = configProcessor ;
+        this.projectManager = projectManager;
+        this.projectSettingsManager = projectSettingsManager;
+        this.buildServer = sBuildServer;
+        this.slackConfig = configProcessor;
+
 
     }
 
-    public void init()
-    {
+    public void init() {
         buildServer.addListener(this);
     }
 
-    private Gson getGson()
-    {
-        if( gson == null )
-        {
-            gson = new GsonBuilder().create() ;
+    private Gson getGson() {
+        if (gson == null) {
+            gson = new GsonBuilder().create();
         }
 
-        return gson ;
+        return gson;
     }
 
     @Override
     public void buildStarted(SRunningBuild build) {
         super.buildStarted(build);
 
-        if( !build.isPersonal() && slackConfig.postStarted() )
+        SlackProjectSettings projectSettings = getProjectSettings(build);
+
+        if (!build.isPersonal() && (
+                (!projectSettings.postStartedSet() && slackConfig.postStarted()) ||
+                        (projectSettings.postStartedSet() && projectSettings.postStartedEnabled())
+            ))
         {
             postStartedBuild(build);
         }
@@ -73,55 +77,31 @@ public class SlackServerAdapter extends BuildServerAdapter {
     public void buildFinished(SRunningBuild build) {
         super.buildFinished(build);
 
-        if( !build.isPersonal() && build.getBuildStatus().isSuccessful() && slackConfig.postSuccessful() )
-        {
+        if (build.getBuildStatus().isSuccessful()) {
             processSuccessfulBuild(build);
-        }
-        else if ( !build.isPersonal() && build.getBuildStatus().isFailed() && slackConfig.postFailed() )
-        {
-            postFailureBuild(build);
-        }
-        else
-        {
+        } else if (build.getBuildStatus().isFailed()) {
+            processFailedBuild(build);
+        } else {
             //TODO - modify in future if we care about other states
         }
     }
 
-    private void postStartedBuild(SRunningBuild build )
-    {
+    private void postStartedBuild(SRunningBuild build) {
         //Could put other into here. Agents maybe?
-        String message = String.format("Project '%s' build started." , build.getFullName());
+        String message = String.format("Project '%s' build started.", build.getFullName());
         postToSlack(build, message, true);
     }
-    private void postFailureBuild(SRunningBuild build )
-    {
-        String message = "";
 
-        PeriodFormatter durationFormatter = new PeriodFormatterBuilder()
-                .printZeroRarelyFirst()
-                .appendHours()
-                .appendSuffix(" hour", " hours")
-                .appendSeparator(" ")
-                .printZeroRarelyLast()
-                .appendMinutes()
-                .appendSuffix(" minute", " minutes")
-                .appendSeparator(" and ")
-                .appendSeconds()
-                .appendSuffix(" second", " seconds")
-                .toFormatter();
+    private void processFailedBuild(SRunningBuild build) {
+        SlackProjectSettings projectSettings = getProjectSettings(build);
 
-        Duration buildDuration = new Duration(1000*build.getDuration());
+        if (!build.isPersonal() && (
+                (!projectSettings.postFailedSet() && slackConfig.postFailed()) ||
+                        (projectSettings.postFailedSet() && projectSettings.postFailedEnabled())
+        )){
+            String message = "";
 
-        message = String.format("Project '%s' build failed! ( %s )" , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
-
-        postToSlack(build, message, false);
-    }
-
-    private void processSuccessfulBuild(SRunningBuild build) {
-
-        String message = "";
-
-        PeriodFormatter durationFormatter = new PeriodFormatterBuilder()
+            PeriodFormatter durationFormatter = new PeriodFormatterBuilder()
                     .printZeroRarelyFirst()
                     .appendHours()
                     .appendSuffix(" hour", " hours")
@@ -134,103 +114,130 @@ public class SlackServerAdapter extends BuildServerAdapter {
                     .appendSuffix(" second", " seconds")
                     .toFormatter();
 
-        Duration buildDuration = new Duration(1000*build.getDuration());
+            Duration buildDuration = new Duration(1000 * build.getDuration());
 
-        message = String.format("Project '%s' built successfully in %s." , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
+            String buildFailedPermalink = this.slackConfig.getBuildFailedPermalink();
 
-        postToSlack(build, message, true);
+            if (buildFailedPermalink != "")
+                message = String.format("Project '%s' (%s) build failed! ( %s )\n%s", build.getFullName(), build.getBranch().getDisplayName(), durationFormatter.print(buildDuration.toPeriod()), buildFailedPermalink);
+            else
+                message = String.format("Project '%s' (%s) build failed! ( %s )", build.getFullName(), build.getBranch().getDisplayName(), durationFormatter.print(buildDuration.toPeriod()));
+
+            postToSlack(build, message, false);
+        }
+    }
+
+    private void processSuccessfulBuild(SRunningBuild build) {
+
+        SlackProjectSettings projectSettings = getProjectSettings(build);
+
+        if (!build.isPersonal() && (
+                (!projectSettings.postSuccessfulSet() && slackConfig.postSuccessful()) ||
+                        (projectSettings.postSuccessfulSet() && projectSettings.postSuccessfulEnabled())
+        )){
+            String message = "";
+
+            PeriodFormatter durationFormatter = new PeriodFormatterBuilder()
+                    .printZeroRarelyFirst()
+                    .appendHours()
+                    .appendSuffix(" hour", " hours")
+                    .appendSeparator(" ")
+                    .printZeroRarelyLast()
+                    .appendMinutes()
+                    .appendSuffix(" minute", " minutes")
+                    .appendSeparator(" and ")
+                    .appendSeconds()
+                    .appendSuffix(" second", " seconds")
+                    .toFormatter();
+
+            Duration buildDuration = new Duration(1000 * build.getDuration());
+
+            message = String.format("Project '%s' (%s) built successfully in %s.", build.getFullName(), build.getBranch().getDisplayName(), durationFormatter.print(buildDuration.toPeriod()));
+
+            postToSlack(build, message, true);
+        }
     }
 
     /**
      * Post a payload to slack with a message and good/bad color. Committer summary is automatically added as an attachment
-     * @param build the build the message is relating to
-     * @param message main message to include, 'Build X completed...' etc
+     *
+     * @param build     the build the message is relating to
+     * @param message   main message to include, 'Build X completed...' etc
      * @param goodColor true for 'good' builds, false for danger.
      */
     private void postToSlack(SRunningBuild build, String message, boolean goodColor) {
-        try{
+        try {
 
             URL url = new URL(slackConfig.getPostUrl());
 
-            SlackProjectSettings projectSettings = (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(),"slackSettings");
+            SlackProjectSettings projectSettings = (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(), "slackSettings");
 
-            if( ! projectSettings.isEnabled() )
-            {
-                return ;
+            if (!projectSettings.isEnabled()) {
+                return;
             }
 
             String iconUrl = projectSettings.getLogoUrl();
 
-            if(iconUrl == null || iconUrl.length() < 1 )
-            {
-                iconUrl = slackConfig.getLogoUrl() ;
+            if (iconUrl == null || iconUrl.length() < 1) {
+                iconUrl = slackConfig.getLogoUrl();
             }
 
             String configuredChannel = build.getParametersProvider().get("SLACK_CHANNEL");
             String channel = this.slackConfig.getDefaultChannel();
 
-            if( configuredChannel != null && configuredChannel.length() > 0 )
-            {
-                channel = configuredChannel ;
-            }
-            else if( projectSettings != null && projectSettings.getChannel() != null && projectSettings.getChannel().length() > 0 )
-            {
-                channel = projectSettings.getChannel() ;
+            if (configuredChannel != null && configuredChannel.length() > 0) {
+                channel = configuredChannel;
+            } else if (projectSettings != null && projectSettings.getChannel() != null && projectSettings.getChannel().length() > 0) {
+                channel = projectSettings.getChannel();
             }
 
             UserSet<SUser> committers = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
             StringBuilder committersString = new StringBuilder();
 
-            for( SUser committer : committers.getUsers() )
-            {
-                if( committer != null)
-                {
-                    String committerName = committer.getName() ;
-                    if( committerName == null || committerName.equals("") )
-                    {
-                        committerName = committer.getUsername() ;
+            for (SUser committer : committers.getUsers()) {
+                if (committer != null) {
+                    String committerName = committer.getName();
+                    if (committerName == null || committerName.equals("")) {
+                        committerName = committer.getUsername();
                     }
 
-                    if( committerName != null && !committerName.equals(""))
-                    {
+                    if (committerName != null && !committerName.equals("")) {
                         committersString.append(committerName);
                         committersString.append(",");
                     }
                 }
             }
 
-            if( committersString.length() > 0 )
-            {
-                committersString.deleteCharAt(committersString.length()-1); //remove the last ,
+            if (committersString.length() > 0) {
+                committersString.deleteCharAt(committersString.length() - 1); //remove the last ,
             }
 
             String commitMsg = committersString.toString();
 
 
             JsonObject payloadObj = new JsonObject();
-            payloadObj.addProperty("channel" , channel);
-            payloadObj.addProperty("username" , "TeamCity");
+            payloadObj.addProperty("channel", channel);
+            payloadObj.addProperty("username", "TeamCity");
             payloadObj.addProperty("text", message);
-            payloadObj.addProperty("icon_url",iconUrl);
+            payloadObj.addProperty("icon_url", iconUrl);
 
             JsonArray attachmentsObj = new JsonArray();
 
-            if( commitMsg.length() > 0 )
-            {
+            if (commitMsg.length() > 0) {
                 JsonObject attachment = new JsonObject();
 
-                attachment.addProperty("fallback", "Changes by"+ commitMsg);
-                attachment.addProperty("color",( goodColor ? "good" : "danger"));
+                attachment.addProperty("fallback", "Changes by" + commitMsg);
+                attachment.addProperty("color", (goodColor ? "good" : "danger"));
 
                 JsonArray fields = new JsonArray();
-                JsonObject field = new JsonObject() ;
+                JsonObject field = new JsonObject();
 
-                field.addProperty("title","Changes By");
-                field.addProperty("value",commitMsg);
+                field.addProperty("title", "Changes By");
+                field.addProperty("value", commitMsg);
                 field.addProperty("short", true);
 
                 fields.add(field);
-                attachment.add("fields",fields);
+                attachment.add("fields", fields);
 
                 attachmentsObj.add(attachment);
 
@@ -238,8 +245,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
             //Do we have any issues?
 
-            if( build.isHasRelatedIssues() )
-            {
+            if (build.isHasRelatedIssues()) {
                 //We do!
                 Collection<Issue> issues = build.getRelatedIssues();
                 JsonObject issuesAttachment = new JsonObject();
@@ -247,8 +253,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 StringBuilder issueIds = new StringBuilder();
                 StringBuilder clickableIssueIds = new StringBuilder();
 
-                for( Issue issue : issues )
-                {
+                for (Issue issue : issues) {
                     issueIds.append(',');
                     issueIds.append(issue.getId());
 
@@ -261,25 +266,23 @@ public class SlackServerAdapter extends BuildServerAdapter {
                     clickableIssueIds.append('>');
                 }
 
-                if( issueIds.length() > 0 )
-                {
+                if (issueIds.length() > 0) {
                     issueIds.deleteCharAt(0); //delete first ','
                 }
 
-                if( clickableIssueIds.length() > 0 )
-                {
+                if (clickableIssueIds.length() > 0) {
                     clickableIssueIds.deleteCharAt(0); //delete first ','
                 }
 
-                issuesAttachment.addProperty("fallback" , "Issues " + issueIds.toString());
+                issuesAttachment.addProperty("fallback", "Issues " + issueIds.toString());
                 //Not sure what color, if any to use for this. For now, leave it the same as the committers one
-                issuesAttachment.addProperty("color",( goodColor ? "good" : "danger"));
+                issuesAttachment.addProperty("color", (goodColor ? "good" : "danger"));
 
                 JsonArray fields = new JsonArray();
-                JsonObject field = new JsonObject() ;
+                JsonObject field = new JsonObject();
 
-                field.addProperty("title","Related Issues");
-                field.addProperty("value",clickableIssueIds.toString());
+                field.addProperty("title", "Related Issues");
+                field.addProperty("value", clickableIssueIds.toString());
                 field.addProperty("short", true);
 
                 fields.add(field);
@@ -288,7 +291,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 attachmentsObj.add(issuesAttachment);
             }
 
-            if( attachmentsObj.size() > 0 ) {
+            if (attachmentsObj.size() > 0) {
                 payloadObj.add("attachments", attachmentsObj);
             }
 
@@ -298,24 +301,25 @@ public class SlackServerAdapter extends BuildServerAdapter {
             BufferedOutputStream bos = new BufferedOutputStream(conn.getOutputStream());
 
             String payloadJson = getGson().toJson(payloadObj);
-            String bodyContents = "payload=" + payloadJson ;
+            String bodyContents = "payload=" + payloadJson;
             bos.write(bodyContents.getBytes("utf8"));
             bos.flush();
             bos.close();
 
-            int serverResponseCode = conn.getResponseCode() ;
+            int serverResponseCode = conn.getResponseCode();
 
             conn.disconnect();
-            conn = null ;
-            url = null ;
+            conn = null;
+            url = null;
 
-        }
-        catch ( MalformedURLException ex )
-        {
+        } catch (MalformedURLException ex) {
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    private SlackProjectSettings getProjectSettings(SRunningBuild build) {
+        return (SlackProjectSettings) projectSettingsManager.getSettings(build.getProjectId(), "slackSettings");
+    }
 }

@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class SlackAdminPage extends AdminPage {
 
-    private final SlackConfigProcessor configProcesser;
+    private final SlackConfigProcessor configProcessor;
 
     public SlackAdminPage(PagePlaces pagePlaces, PluginDescriptor descriptor , SlackConfigProcessor configProcessor) {
         super(pagePlaces);
@@ -25,7 +25,7 @@ public class SlackAdminPage extends AdminPage {
         setPosition(PositionConstraint.after("clouds", "email", "jabber"));
         register();
 
-        this.configProcesser = configProcessor ;
+        this.configProcessor = configProcessor ;
     }
 
     @Override
@@ -41,8 +41,9 @@ public class SlackAdminPage extends AdminPage {
     public void fillModel(Map<String, Object> model, HttpServletRequest request) {
         super.fillModel(model, request);
 
-        model.put("defaultChannel" , configProcesser.getDefaultChannel());
-        model.put("logoUrl" , configProcesser.getLogoUrl());
-        model.put("postUrl" , configProcesser.getPostUrl());
+        model.put("defaultChannel" , configProcessor.getDefaultChannel());
+        model.put("logoUrl" , configProcessor.getLogoUrl());
+        model.put("postUrl" , configProcessor.getPostUrl());
+        model.put("buildFailedPermalink", configProcessor.getBuildFailedPermalink());
     }
 }

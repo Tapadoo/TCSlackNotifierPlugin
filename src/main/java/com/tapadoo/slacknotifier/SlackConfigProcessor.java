@@ -13,6 +13,7 @@ public class SlackConfigProcessor implements MainConfigProcessor {
     public static final String PREF_KEY_SLACK_DEF_CHANNEL = "slackDefaultChannel";
     public static final String PREF_KEY_SLACK_POSTURL = "slackPostUrl";
     public static final String PREF_KEY_SLACK_LOGOURL = "slackLogoUrl";
+    public static final String PREF_KEY_BUILD_FAILED_PERMALINK = "buildFailedPermalink";
 
     private static final java.lang.String PREF_CHILD_ELEMENT = "slackNotifier";
 
@@ -23,6 +24,7 @@ public class SlackConfigProcessor implements MainConfigProcessor {
     private String defaultChannel = "#general";
     private String postUrl;
     private String logoUrl;
+    private String buildFailedPermalink;
 
     private boolean postSuccessful = true ;
     private boolean postStarted = false ;
@@ -61,6 +63,14 @@ public class SlackConfigProcessor implements MainConfigProcessor {
         this.defaultChannel = defaultChannel;
     }
 
+    public String getBuildFailedPermalink(){
+        return buildFailedPermalink;
+    }
+
+    public void setBuildFailedPermalink(String permalink){
+        this.buildFailedPermalink = permalink;
+    }
+
     public String getPostUrl() {
         return postUrl;
     }
@@ -89,6 +99,7 @@ public class SlackConfigProcessor implements MainConfigProcessor {
         defaultChannel = mainConfigElement.getChildText(PREF_KEY_SLACK_DEF_CHANNEL);
         postUrl = mainConfigElement.getChildText(PREF_KEY_SLACK_POSTURL);
         logoUrl = mainConfigElement.getChildText(PREF_KEY_SLACK_LOGOURL);
+        buildFailedPermalink = mainConfigElement.getChildText(PREF_KEY_BUILD_FAILED_PERMALINK);
 
         Attribute postSuccessfulAttr = mainConfigElement.getAttribute(ATTR_NAME_POST_SUCCESSFUL);
         Attribute postStartedAttr = mainConfigElement.getAttribute(ATTR_NAME_POST_STARTED);
@@ -135,12 +146,14 @@ public class SlackConfigProcessor implements MainConfigProcessor {
         Element defChannelElement = new Element(PREF_KEY_SLACK_DEF_CHANNEL);
         Element postUrlElement = new Element(PREF_KEY_SLACK_POSTURL);
         Element logoUrlElement = new Element(PREF_KEY_SLACK_LOGOURL);
+        Element buildFailedPermalinkElement = new Element(PREF_KEY_BUILD_FAILED_PERMALINK);
 
         defChannelElement.setText(defaultChannel);
 
         mainConfigElement.addContent(defChannelElement);
         mainConfigElement.addContent(postUrlElement);
         mainConfigElement.addContent(logoUrlElement);
+        mainConfigElement.addContent(buildFailedPermalinkElement);
 
         element.addContent(mainConfigElement);
 
