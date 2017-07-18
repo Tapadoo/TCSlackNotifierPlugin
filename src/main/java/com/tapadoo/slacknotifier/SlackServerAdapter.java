@@ -90,7 +90,12 @@ public class SlackServerAdapter extends BuildServerAdapter {
     private void postStartedBuild(SRunningBuild build )
     {
         //Could put other into here. Agents maybe?
-        String message = String.format("Project '%s' build started." , build.getFullName());
+        String message = "STARTED " + build.getFullName() + " (" + build.getBranch().getName() + ")" + " #" + build.getBuildNumber()+"\n";
+        message += "Agent: " + build.getAgent().getHostName() + " : " + build.getAgent().getHostAddress() + "\n";
+        if (build.getBuildComment() != null) {
+            message += build.getBuildComment().getUser() + " " + build.getBuildComment().getComment();
+        }
+        //String message = String.format("'%s' (%s) build started on Agent: %s." , build.getFullName(), build.getBranch(), build.getAgent().getHostName());
         postToSlack(build, message, true);
     }
     private void postFailureBuild(SRunningBuild build )
@@ -112,7 +117,13 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         Duration buildDuration = new Duration(1000*build.getDuration());
 
-        message = String.format("Project '%s' build failed! ( %s )" , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
+        message += "FAILURE " + build.getFullName() + " (" + build.getBranch().getName() + ")" + " #" + build.getBuildNumber()+"\n";
+        message += "Agent: " + build.getAgent().getHostName() + " : " + build.getAgent().getHostAddress() + "\n";
+        message += "Build failed in " + durationFormatter.print(buildDuration.toPeriod());
+        if (build.getBuildComment() != null) {
+            message += "\n" + build.getBuildComment().getUser() + " " + build.getBuildComment().getComment();
+        }
+        //message = String.format("'%s' (%s) build failed on Agent: %s! (%s)" , build.getFullName(), build.getBranch().getDisplayName(), build.getAgent().getHostName() ,durationFormatter.print(buildDuration.toPeriod()));
 
         postToSlack(build, message, false);
     }
@@ -122,21 +133,27 @@ public class SlackServerAdapter extends BuildServerAdapter {
         String message = "";
 
         PeriodFormatter durationFormatter = new PeriodFormatterBuilder()
-                    .printZeroRarelyFirst()
-                    .appendHours()
-                    .appendSuffix(" hour", " hours")
-                    .appendSeparator(" ")
-                    .printZeroRarelyLast()
-                    .appendMinutes()
-                    .appendSuffix(" minute", " minutes")
-                    .appendSeparator(" and ")
-                    .appendSeconds()
-                    .appendSuffix(" second", " seconds")
-                    .toFormatter();
+                .printZeroRarelyFirst()
+                .appendHours()
+                .appendSuffix(" hour", " hours")
+                .appendSeparator(" ")
+                .printZeroRarelyLast()
+                .appendMinutes()
+                .appendSuffix(" minute", " minutes")
+                .appendSeparator(" and ")
+                .appendSeconds()
+                .appendSuffix(" second", " seconds")
+                .toFormatter();
 
         Duration buildDuration = new Duration(1000*build.getDuration());
 
-        message = String.format("Project '%s' built successfully in %s." , build.getFullName() , durationFormatter.print(buildDuration.toPeriod()));
+        message += "SUCCESS " + build.getFullName() + " (" + build.getBranch().getName() + ")" +  " #" + build.getBuildNumber()+"\n";
+        message += "Agent: " + build.getAgent().getHostName() + " : " + build.getAgent().getHostAddress() + "\n";
+        message += "Build succeeded in " + durationFormatter.print(buildDuration.toPeriod());
+        if (build.getBuildComment() != null) {
+            message += "\n" + build.getBuildComment().getUser() + " " + build.getBuildComment().getComment();
+        }
+        //message = String.format("'%s' (%s) built successfully in %s on Agent: %s." , build.getFullName(), build.getBranch().getDisplayName(), durationFormatter.print(buildDuration.toPeriod()), build.getAgent().getHostName());
 
         postToSlack(build, message, true);
     }
@@ -319,3 +336,4 @@ public class SlackServerAdapter extends BuildServerAdapter {
     }
 
 }
+
