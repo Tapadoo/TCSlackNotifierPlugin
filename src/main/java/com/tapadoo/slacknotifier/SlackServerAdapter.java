@@ -214,16 +214,24 @@ public class SlackServerAdapter extends BuildServerAdapter {
             payloadObj.addProperty("icon_url",iconUrl);
 
             JsonArray attachmentsObj = new JsonArray();
-            JsonObject attachment = null ;
+            JsonObject attachment = new JsonObject() ;
+            attachmentsObj.add(attachment);
+
             JsonArray fields = new JsonArray();
+
+
+            //Attach the build number
+
+            JsonObject buildField = new JsonObject() ;
+            buildField.addProperty("title" , "Build");
+            buildField.addProperty("short" , true);
+            buildField.addProperty("value" , build.getBuildNumber());
+            fields.add(buildField);
 
             StringBuilder fallbackMessage = new StringBuilder();
 
             if( commitMsg.length() > 0 )
             {
-                attachment = new JsonObject();
-                attachmentsObj.add(attachment);
-
                 JsonObject field = new JsonObject() ;
 
                 field.addProperty("title","Changes By");
@@ -238,16 +246,12 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
             }
 
+
             //Do we have any issues?
 
             if( build.isHasRelatedIssues() )
             {
 
-                if( attachment == null )
-                {
-                    attachment = new JsonObject();
-                    attachmentsObj.add(attachment);
-                }
                 //We do!
                 Collection<Issue> issues = build.getRelatedIssues();
 
@@ -290,14 +294,10 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 fallbackMessage.append(issueIds.toString());
             }
 
-            if( attachment != null ) {
-                attachment.addProperty("color", (goodColor ? "good" : "danger"));
-            }
+            attachment.addProperty("color", (goodColor ? "good" : "danger"));
 
-            if( attachment != null && fields.size() > 0 )
-            {
-                attachment.add("fields",fields);
-            }
+
+            attachment.add("fields",fields);
 
             if( attachmentsObj.size() > 0 ) {
                 payloadObj.add("attachments", attachmentsObj);
