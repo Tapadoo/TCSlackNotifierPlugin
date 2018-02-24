@@ -4,15 +4,15 @@ A plugin for [TeamCity](http://www.jetbrains.com/teamcity/) to post notification
 
 It works by registering as a server listener, and posts to slack on build events like successful builds (optionally also builds starting and failing)
 
-#Build Plugin
+# Build Plugin
 
 Gradle is used to build. Wrapper is included in the project so you dont need to install it, just have java.
 
     ./gradlew buildZip
 
-this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-<version>.zip` you can also download a build from GitHubs versions section.
+this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-<version>.zip` you can also download a build from GitHubs versions section. Make sure you download the binary zip and not the source.
 
-#Install Plugin
+# Install Plugin
 
 Copy the zip file into TeamCity plugin directory inside the data directory, usually `.BuildServer`
 
@@ -22,12 +22,12 @@ scp build/distributions/TCSlackNotifierPlugin-<version>.zip buildserver:.BuildSe
 
 Then restart TeamCity.
 
-#Configuration
+# Configuration
 
-###In slack
+### In slack
 Add a new webhook integration. Make a note of the URL.
 
-###In TeamCity
+### In TeamCity
 
 Edit the main config file, usually `.BuildServer/config/main-config.xml` and add an element like so:
 
@@ -49,7 +49,7 @@ Set the **slackPostUrl** to point to the url provided on the Slack integration p
 
 This by default will post all builds to slack. you can tweak these on a project level though
 
-####Project Config (Optional)
+#### Project Config (Optional)
 
 To change channel, change the slack logo used for that project or disable per project:
 
@@ -64,11 +64,13 @@ Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere in
 </settings>
 ```
 
-#Note on TeamCity version support
+# Note on TeamCity version support
 
-I'm still using **TeamCity 7.1** , but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also. Have yet to test on TeamCity 9 but whats the chance it doesn't work?
+Version 3 was updated for TeamCity 2017.2 support. It was just a settings update and recompile - so any issues from previous versions remain
 
-###Issues
+Previous versions where built for TeamCity 7.1, but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also. Have yet to test on TeamCity 9 but whats the chance it doesn't work?
+
+### Issues
 
 * all xml config - needs web ui extensions for updating settings from GUI. Considering it.
 * channel can be changed per-project either by environmental variable (SLACK_CHANNEL (env var may be broken)) or by changing the project specific xml in the data directory. This could also use web ui extension UI for editing.
