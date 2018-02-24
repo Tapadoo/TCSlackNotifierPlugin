@@ -66,9 +66,9 @@ Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere in
 
 # Note on TeamCity version support
 
-Version 3 was updated for TeamCity 2017.2 support. It was just a settings update and recompile - so any issues from previous versions remain
+Version 3 was updated for TeamCity 2017.2 support. It was just a settings update and recompile - so any issues from previous versions remain.
 
-Previous versions where built for TeamCity 7.1, but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also. Have yet to test on TeamCity 9 but whats the chance it doesn't work?
+Previous versions where built for TeamCity 7.1, but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also. Users have reported it working on version 9 also.
 
 ### Issues
 
