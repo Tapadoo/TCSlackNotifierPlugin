@@ -1,8 +1,16 @@
 
+# 4.1.1
+* Moved commit messages to their own attachment and updated formatting
+
+# 4.0.2
+* Added commit messages as a field to slack message
+
 # 3.0.0
 * recompiled for TeamCity 2017.2, with updated dependencies, Java 8.
+
 # 2.6.0
 * Missing/Internal release
+
 # 2.5.0
 * Missing/Internal release
 
