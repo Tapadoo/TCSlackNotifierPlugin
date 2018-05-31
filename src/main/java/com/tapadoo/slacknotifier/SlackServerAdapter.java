@@ -183,24 +183,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
             UserSet<SUser> committers = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
             StringBuilder committersString = new StringBuilder();
 
-            List<SVcsModification>  changes =  build.getChanges(SelectPrevBuildPolicy.SINCE_LAST_SUCCESSFULLY_FINISHED_BUILD, true);
-
-            StringBuilder commitMessage = new StringBuilder();
-
-            /*
-             * If this field starts to feel too long in slack, we should only use the first item in the array, which would be the latest change
-             *
-             */
-            for ( int i = 0 ; i < changes.size() ; i++ ){
-                SVcsModification modification = changes.get(i);
-                String desc = modification.getDescription();
-                commitMessage.append(desc);
-
-                if( i < changes.size() - 1 ) {
-                    commitMessage.append("\n------\n");
-                }
-            }
-
             for( SUser committer : committers.getUsers() )
             {
                 if( committer != null)
@@ -314,21 +296,14 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 fallbackMessage.append(issueIds.toString());
             }
 
-            /* TODO: Consider adding a setting to SlackProjectSettings perhaps to enable / disable commit messages at a project level? */
-            if( commitMessage.length() > 0 ) {
-                JsonObject field = new JsonObject() ;
-
-                field.addProperty("title", "Commit Messages");
-                field.addProperty("value",commitMessage.toString());
-                field.addProperty("short", false);
-
-                fields.add(field);
-            }
-
             attachment.addProperty("color", (goodColor ? "good" : "danger"));
-
-
             attachment.add("fields",fields);
+
+            JsonObject commitAttachment = createCommitAttachment(build);
+
+            if(commitAttachment != null) {
+                attachmentsObj.add(commitAttachment);
+            }
 
             if( attachmentsObj.size() > 0 ) {
                 payloadObj.add("attachments", attachmentsObj);
@@ -358,6 +333,42 @@ public class SlackServerAdapter extends BuildServerAdapter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private JsonObject createCommitAttachment(SRunningBuild build) {
+
+        List<SVcsModification>  changes =  build.getChanges(SelectPrevBuildPolicy.SINCE_LAST_SUCCESSFULLY_FINISHED_BUILD, true);
+
+        StringBuilder commitMessage = new StringBuilder();
+
+            /*
+             * If this field starts to feel too long in slack, we should only use the first item in the array, which would be the latest change
+             *
+             */
+        for ( int i = 0 ; i < changes.size() ; i++ ){
+            SVcsModification modification = changes.get(i);
+            String desc = modification.getDescription();
+            commitMessage.append("‣ ");
+            commitMessage.append(desc);
+
+            if( i < changes.size() - 1 ) {
+                commitMessage.append("\n");
+            }
+        }
+
+        if (changes.size() < 1) {
+            return null;
+        }
+
+        String commitMessageString = commitMessage.toString();
+        JsonObject attachment = new JsonObject();
+        attachment.addProperty("title", "Commit Messages");
+        attachment.addProperty("fallback" , commitMessageString);
+        attachment.addProperty("text" , commitMessageString);
+        attachment.addProperty("color" , "#2FA8B9");
+
+        return attachment;
+
     }
 
 }
