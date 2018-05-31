@@ -11,9 +11,7 @@ import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.users.UserSet;
 import jetbrains.buildServer.vcs.SVcsModification;
 import jetbrains.buildServer.vcs.SelectPrevBuildPolicy;
-import jetbrains.buildServer.vcs.VcsRoot;
 import org.joda.time.Duration;
-import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
@@ -23,6 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 
@@ -341,10 +340,10 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
         StringBuilder commitMessage = new StringBuilder();
 
-            /*
-             * If this field starts to feel too long in slack, we should only use the first item in the array, which would be the latest change
-             *
-             */
+        /*
+         * If this field starts to feel too long in slack, we should only use the first item in the array, which would be the latest change
+         *
+         */
         for ( int i = 0 ; i < changes.size() ; i++ ){
             SVcsModification modification = changes.get(i);
             String desc = modification.getDescription();
@@ -360,12 +359,24 @@ public class SlackServerAdapter extends BuildServerAdapter {
             return null;
         }
 
+
         String commitMessageString = commitMessage.toString();
         JsonObject attachment = new JsonObject();
         attachment.addProperty("title", "Commit Messages");
         attachment.addProperty("fallback" , commitMessageString);
         attachment.addProperty("text" , commitMessageString);
         attachment.addProperty("color" , "#2FA8B9");
+
+        Branch branch = build.getBranch();
+        if (branch != null) {
+            attachment.addProperty("footer" , String.format("Built from %s", branch.getDisplayName()) );
+
+            Date finishDate = build.getFinishDate();
+            if (finishDate != null ) {
+                long finishTime = finishDate.getTime()/1000;
+                attachment.addProperty("ts" , finishTime);
+            }
+        }
 
         return attachment;
 
