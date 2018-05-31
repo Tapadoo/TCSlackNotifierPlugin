@@ -348,10 +348,11 @@ public class SlackServerAdapter extends BuildServerAdapter {
         for ( int i = 0 ; i < changes.size() ; i++ ){
             SVcsModification modification = changes.get(i);
             String desc = modification.getDescription();
+            commitMessage.append("‣ ");
             commitMessage.append(desc);
 
             if( i < changes.size() - 1 ) {
-                commitMessage.append("\n------\n");
+                commitMessage.append("\n");
             }
         }
 
