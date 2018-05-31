@@ -9,6 +9,7 @@ import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.settings.ProjectSettingsManager;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.users.UserSet;
+import jetbrains.buildServer.vcs.SVcsModification;
 import jetbrains.buildServer.vcs.SelectPrevBuildPolicy;
 import jetbrains.buildServer.vcs.VcsRoot;
 import org.joda.time.Duration;
@@ -22,6 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
 
 
 /**
@@ -181,6 +183,24 @@ public class SlackServerAdapter extends BuildServerAdapter {
             UserSet<SUser> committers = build.getCommitters(SelectPrevBuildPolicy.SINCE_LAST_BUILD);
             StringBuilder committersString = new StringBuilder();
 
+            List<SVcsModification>  changes =  build.getChanges(SelectPrevBuildPolicy.SINCE_LAST_SUCCESSFULLY_FINISHED_BUILD, true);
+
+            StringBuilder commitMessage = new StringBuilder();
+
+            /*
+             * If this field starts to feel too long in slack, we should only use the first item in the array, which would be the latest change
+             *
+             */
+            for ( int i = 0 ; i < changes.size() ; i++ ){
+                SVcsModification modification = changes.get(i);
+                String desc = modification.getDescription();
+                commitMessage.append(desc);
+
+                if( i < changes.size() - 1 ) {
+                    commitMessage.append("\n------\n");
+                }
+            }
+
             for( SUser committer : committers.getUsers() )
             {
                 if( committer != null)
@@ -204,7 +224,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 committersString.deleteCharAt(committersString.length()-1); //remove the last ,
             }
 
-            String commitMsg = committersString.toString();
+            String committersMsg = committersString.toString();
 
 
             JsonObject payloadObj = new JsonObject();
@@ -230,18 +250,18 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
             StringBuilder fallbackMessage = new StringBuilder();
 
-            if( commitMsg.length() > 0 )
+            if( committersMsg.length() > 0 )
             {
                 JsonObject field = new JsonObject() ;
 
                 field.addProperty("title","Changes By");
-                field.addProperty("value",commitMsg);
+                field.addProperty("value",committersMsg);
                 field.addProperty("short", true);
 
                 fields.add(field);
 
                 fallbackMessage.append("Changes by ");
-                fallbackMessage.append(commitMsg);
+                fallbackMessage.append(committersMsg);
                 fallbackMessage.append(" ");
 
             }
@@ -292,6 +312,17 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
                 fallbackMessage.append("Related Issues ");
                 fallbackMessage.append(issueIds.toString());
+            }
+
+            /* TODO: Consider adding a setting to SlackProjectSettings perhaps to enable / disable commit messages at a project level? */
+            if( commitMessage.length() > 0 ) {
+                JsonObject field = new JsonObject() ;
+
+                field.addProperty("title", "Commit Messages");
+                field.addProperty("value",commitMessage.toString());
+                field.addProperty("short", false);
+
+                fields.add(field);
             }
 
             attachment.addProperty("color", (goodColor ? "good" : "danger"));

@@ -14,7 +14,7 @@ this will generate a zip file with the right meta data in the right folder struc
 
 # Install Plugin
 
-Copy the zip file into TeamCity plugin directory inside the data directory, usually `.BuildServer`
+In the latest version of teamcity, the plugin zip can be uploaded via the admin page. In older versions, deploy manually by copying the zip file into TeamCity plugin directory inside the data directory, usually `.BuildServer`
 
 ```
 scp build/distributions/TCSlackNotifierPlugin-<version>.zip buildserver:.BuildServer/plugins/
