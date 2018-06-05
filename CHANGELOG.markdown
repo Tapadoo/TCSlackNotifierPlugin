@@ -1,4 +1,7 @@
 
+# 4.2.2
+* Added test passed/failed count as another field to the Slack post
+
 # 4.1.1
 * Moved commit messages to their own attachment and updated formatting
 

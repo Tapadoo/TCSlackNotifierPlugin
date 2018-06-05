@@ -247,6 +247,19 @@ public class SlackServerAdapter extends BuildServerAdapter {
 
             }
 
+            BuildStatistics testStats =  build.getBuildStatistics(BuildStatisticsOptions.ALL_TESTS_NO_DETAILS);
+
+            if ( testStats != null && testStats.getAllTestRunCount() > 0 ) {
+                int failureCount = testStats.getFailedTestCount();
+                int successCount = testStats.getPassedTestCount();
+
+                JsonObject field = new JsonObject();
+                field.addProperty("title" , "Tests");
+                field.addProperty("value", String.format("%d passed, %d failed.", successCount, failureCount));
+                field.addProperty("short", true);
+
+                fields.add(field);
+            }
 
             //Do we have any issues?
 
@@ -320,7 +333,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
             bos.close();
 
             int serverResponseCode = conn.getResponseCode() ;
-
             conn.disconnect();
             conn = null ;
             url = null ;
