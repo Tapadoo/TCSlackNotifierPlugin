@@ -1,3 +1,5 @@
+# 4.3.0
+* Bumped up Teamcity library versions to 2018
 
 # 4.2.2
 * Added test passed/failed count as another field to the Slack post
