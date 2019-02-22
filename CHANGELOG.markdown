@@ -1,3 +1,6 @@
+# 4.4.0
+* Added support for teamcity configuration parameter "system.POST_TO_SLACK" to supress posts from config level instead of project level by setting it to false or 0. Fixed bug with existing system.SLACK_CHANNEL param name for overwriting settings at the config level.
+
 # 4.3.0
 * Bumped up Teamcity library versions to 2018
 

@@ -42,7 +42,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
         this.projectSettingsManager = projectSettingsManager ;
         this.buildServer = sBuildServer ;
         this.slackConfig = configProcessor ;
-
     }
 
     public void init()
@@ -73,6 +72,13 @@ public class SlackServerAdapter extends BuildServerAdapter {
     @Override
     public void buildFinished(SRunningBuild build) {
         super.buildFinished(build);
+
+
+        String postToSlack = build.getParametersProvider().get("system.POST_TO_SLACK");
+
+        if(postToSlack != null && (postToSlack.equals("false") || postToSlack.equals("0") )) {
+            return ;
+        }
 
         if( !build.isPersonal() && build.getBuildStatus().isSuccessful() && slackConfig.postSuccessful() )
         {
@@ -167,7 +173,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 iconUrl = slackConfig.getLogoUrl() ;
             }
 
-            String configuredChannel = build.getParametersProvider().get("SLACK_CHANNEL");
+            String configuredChannel = build.getParametersProvider().get("system.SLACK_CHANNEL");
             String channel = this.slackConfig.getDefaultChannel();
 
             if( configuredChannel != null && configuredChannel.length() > 0 )
