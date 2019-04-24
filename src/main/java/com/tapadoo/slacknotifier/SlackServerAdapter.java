@@ -353,6 +353,8 @@ public class SlackServerAdapter extends BuildServerAdapter {
     }
 
     private JsonObject createCommitAttachment(SRunningBuild build) {
+        String ignoreCommitMessage = build.getParametersProvider().get("system.SLACK_IGNORE_COMMIT_MESSAGE");
+        if (ignoreCommitMessage != null && ignoreCommitMessage.equalsIgnoreCase("true")) return null;
 
         List<SVcsModification>  changes =  build.getChanges(SelectPrevBuildPolicy.SINCE_LAST_SUCCESSFULLY_FINISHED_BUILD, true);
 

@@ -1,3 +1,6 @@
+# 4.4.1
+* Added support for teamcity configuration parameter "system.SLACK_IGNORE_COMMIT_MESSAGE" to allow user to ignore adding commits to slack message.
+
 # 4.4.0
 * Added support for teamcity configuration parameter "system.POST_TO_SLACK" to supress posts from config level instead of project level by setting it to false or 0. Fixed bug with existing system.SLACK_CHANNEL param name for overwriting settings at the config level.
 
