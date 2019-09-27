@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xs:schema version="1.0"
-            xmlns:xs="http://www.w3.org/2001/XMLSchema"
-            elementFormDefault="qualified" 
-  >
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           version="1.0"
+           elementFormDefault="qualified">
 
   <xs:element name="teamcity-plugin" type="TeamCityPluginDescriptor"/>
   <xs:complexType name="TeamCityPluginDescriptor">
@@ -30,14 +29,12 @@
         </xs:complexType>
       </xs:element>
 
-
       <xs:element name="requirements" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:attribute name="min-build" type="xs:long" use="optional"/>
           <xs:attribute name="max-build" type="xs:long" use="optional"/>
         </xs:complexType>
       </xs:element>
-
 
       <xs:element name="deployment" minOccurs="0" maxOccurs="1">
         <xs:complexType>
@@ -60,7 +57,6 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-
 
     </xs:sequence>
   </xs:complexType>

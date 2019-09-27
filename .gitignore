@@ -1,7 +1,14 @@
-build/
-.DS_Store
+# IDEA
 *.iml
-.gradle/
-.idea/
-out/
-.gradletasknamecache
+.idea/*
+!.idea/codeStyleSettings.xml
+!.idea/codeStyles
+!.idea/icon.png
+!.idea/icon_dark.png
+
+# Gradle
+.gradle
+build
+
+# OSX
+.DS_Store
