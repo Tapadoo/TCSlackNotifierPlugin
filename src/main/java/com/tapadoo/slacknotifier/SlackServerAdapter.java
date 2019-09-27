@@ -9,10 +9,9 @@ import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.settings.ProjectSettingsManager;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.users.UserSet;
+import jetbrains.buildServer.vcs.SVcsModification;
 import jetbrains.buildServer.vcs.SelectPrevBuildPolicy;
-import jetbrains.buildServer.vcs.VcsRoot;
 import org.joda.time.Duration;
-import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
@@ -22,6 +21,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -41,7 +42,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
         this.projectSettingsManager = projectSettingsManager ;
         this.buildServer = sBuildServer ;
         this.slackConfig = configProcessor ;
-
     }
 
     public void init()
@@ -72,6 +72,13 @@ public class SlackServerAdapter extends BuildServerAdapter {
     @Override
     public void buildFinished(SRunningBuild build) {
         super.buildFinished(build);
+
+
+        String postToSlack = build.getParametersProvider().get("system.POST_TO_SLACK");
+
+        if(postToSlack != null && (postToSlack.equals("false") || postToSlack.equals("0") )) {
+            return ;
+        }
 
         if( !build.isPersonal() && build.getBuildStatus().isSuccessful() && slackConfig.postSuccessful() )
         {
@@ -166,7 +173,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 iconUrl = slackConfig.getLogoUrl() ;
             }
 
-            String configuredChannel = build.getParametersProvider().get("SLACK_CHANNEL");
+            String configuredChannel = build.getParametersProvider().get("system.SLACK_CHANNEL");
             String channel = this.slackConfig.getDefaultChannel();
 
             if( configuredChannel != null && configuredChannel.length() > 0 )
@@ -204,7 +211,7 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 committersString.deleteCharAt(committersString.length()-1); //remove the last ,
             }
 
-            String commitMsg = committersString.toString();
+            String committersMsg = committersString.toString();
 
 
             JsonObject payloadObj = new JsonObject();
@@ -214,35 +221,59 @@ public class SlackServerAdapter extends BuildServerAdapter {
             payloadObj.addProperty("icon_url",iconUrl);
 
             JsonArray attachmentsObj = new JsonArray();
+            JsonObject attachment = new JsonObject() ;
+            attachmentsObj.add(attachment);
 
-            if( commitMsg.length() > 0 )
+            JsonArray fields = new JsonArray();
+
+
+            //Attach the build number
+
+            JsonObject buildField = new JsonObject() ;
+            buildField.addProperty("title" , "Build");
+            buildField.addProperty("short" , true);
+            buildField.addProperty("value" , build.getBuildNumber());
+            fields.add(buildField);
+
+            StringBuilder fallbackMessage = new StringBuilder();
+
+            if( committersMsg.length() > 0 )
             {
-                JsonObject attachment = new JsonObject();
-
-                attachment.addProperty("fallback", "Changes by"+ commitMsg);
-                attachment.addProperty("color",( goodColor ? "good" : "danger"));
-
-                JsonArray fields = new JsonArray();
                 JsonObject field = new JsonObject() ;
 
                 field.addProperty("title","Changes By");
-                field.addProperty("value",commitMsg);
+                field.addProperty("value",committersMsg);
                 field.addProperty("short", true);
 
                 fields.add(field);
-                attachment.add("fields",fields);
 
-                attachmentsObj.add(attachment);
+                fallbackMessage.append("Changes by ");
+                fallbackMessage.append(committersMsg);
+                fallbackMessage.append(" ");
 
+            }
+
+            BuildStatistics testStats =  build.getBuildStatistics(BuildStatisticsOptions.ALL_TESTS_NO_DETAILS);
+
+            if ( testStats != null && testStats.getAllTestRunCount() > 0 ) {
+                int failureCount = testStats.getFailedTestCount();
+                int successCount = testStats.getPassedTestCount();
+
+                JsonObject field = new JsonObject();
+                field.addProperty("title" , "Tests");
+                field.addProperty("value", String.format("%d passed, %d failed.", successCount, failureCount));
+                field.addProperty("short", true);
+
+                fields.add(field);
             }
 
             //Do we have any issues?
 
             if( build.isHasRelatedIssues() )
             {
+
                 //We do!
                 Collection<Issue> issues = build.getRelatedIssues();
-                JsonObject issuesAttachment = new JsonObject();
 
                 StringBuilder issueIds = new StringBuilder();
                 StringBuilder clickableIssueIds = new StringBuilder();
@@ -271,21 +302,25 @@ public class SlackServerAdapter extends BuildServerAdapter {
                     clickableIssueIds.deleteCharAt(0); //delete first ','
                 }
 
-                issuesAttachment.addProperty("fallback" , "Issues " + issueIds.toString());
-                //Not sure what color, if any to use for this. For now, leave it the same as the committers one
-                issuesAttachment.addProperty("color",( goodColor ? "good" : "danger"));
+               JsonObject field = new JsonObject() ;
 
-                JsonArray fields = new JsonArray();
-                JsonObject field = new JsonObject() ;
-
-                field.addProperty("title","Related Issues");
+                field.addProperty("title", "Related Issues");
                 field.addProperty("value",clickableIssueIds.toString());
                 field.addProperty("short", true);
 
                 fields.add(field);
-                issuesAttachment.add("fields", fields);
 
-                attachmentsObj.add(issuesAttachment);
+                fallbackMessage.append("Related Issues ");
+                fallbackMessage.append(issueIds.toString());
+            }
+
+            attachment.addProperty("color", (goodColor ? "good" : "danger"));
+            attachment.add("fields",fields);
+
+            JsonObject commitAttachment = createCommitAttachment(build);
+
+            if(commitAttachment != null) {
+                attachmentsObj.add(commitAttachment);
             }
 
             if( attachmentsObj.size() > 0 ) {
@@ -304,7 +339,6 @@ public class SlackServerAdapter extends BuildServerAdapter {
             bos.close();
 
             int serverResponseCode = conn.getResponseCode() ;
-
             conn.disconnect();
             conn = null ;
             url = null ;
@@ -316,6 +350,56 @@ public class SlackServerAdapter extends BuildServerAdapter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private JsonObject createCommitAttachment(SRunningBuild build) {
+        String ignoreCommitMessage = build.getParametersProvider().get("system.SLACK_IGNORE_COMMIT_MESSAGE");
+        if (ignoreCommitMessage != null && ignoreCommitMessage.equalsIgnoreCase("true")) return null;
+
+        List<SVcsModification>  changes =  build.getChanges(SelectPrevBuildPolicy.SINCE_LAST_SUCCESSFULLY_FINISHED_BUILD, true);
+
+        StringBuilder commitMessage = new StringBuilder();
+
+        /*
+         * If this field starts to feel too long in slack, we should only use the first item in the array, which would be the latest change
+         *
+         */
+        for ( int i = 0 ; i < changes.size() ; i++ ){
+            SVcsModification modification = changes.get(i);
+            String desc = modification.getDescription();
+            commitMessage.append("‣ ");
+            commitMessage.append(desc);
+
+            if( i < changes.size() - 1 ) {
+                commitMessage.append("\n");
+            }
+        }
+
+        if (changes.size() < 1) {
+            return null;
+        }
+
+
+        String commitMessageString = commitMessage.toString();
+        JsonObject attachment = new JsonObject();
+        attachment.addProperty("title", "Commit Messages");
+        attachment.addProperty("fallback" , commitMessageString);
+        attachment.addProperty("text" , commitMessageString);
+        attachment.addProperty("color" , "#2FA8B9");
+
+        Branch branch = build.getBranch();
+        if (branch != null) {
+            attachment.addProperty("footer" , String.format("Built from %s", branch.getDisplayName()) );
+
+            Date finishDate = build.getFinishDate();
+            if (finishDate != null ) {
+                long finishTime = finishDate.getTime()/1000;
+                attachment.addProperty("ts" , finishTime);
+            }
+        }
+
+        return attachment;
+
     }
 
 }

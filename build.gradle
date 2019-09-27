@@ -1,26 +1,31 @@
 
 repositories {
     mavenCentral()
+
+    maven {
+        url "https://download.jetbrains.com/teamcity-repository/"
+    }
 }
 
 apply plugin: 'java'
 
 
-sourceCompatibility = 1.6
-version = '2.4.0'
+sourceCompatibility = 1.8
+version = '4.4.1'
+println("##teamcity[buildNumber '$version']")
 
 configurations {
     deploy
 }
 
 dependencies {
-    compile files('libs/openapi.jar', 'libs/server-api.jar' , 'libs/common-api.jar' , 'libs/servlet-api.jar')
+    compile 'org.jetbrains.teamcity:server-api:2018.2+'
+    compile 'org.jetbrains.teamcity:common-api:2018.2+'
     compile 'com.google.code.gson:gson:2.+'
     compile 'org.jdom:jdom:1+'
     compile 'joda-time:joda-time:2.3'
     deploy 'com.google.code.gson:gson:2.+'
     deploy 'joda-time:joda-time:2.3'
-
 }
 
 

@@ -10,11 +10,11 @@ Gradle is used to build. Wrapper is included in the project so you dont need to 
 
     ./gradlew buildZip
 
-this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-<version>.zip` you can also download a build from GitHubs versions section.
+this will generate a zip file with the right meta data in the right folder structure at : `build/distributions/TCSlackNotifierPlugin-<version>.zip` you can also download a build from GitHubs versions section. Make sure you download the binary zip and not the source.
 
 # Install Plugin
 
-Copy the zip file into TeamCity plugin directory inside the data directory, usually `.BuildServer`
+In the latest version of teamcity, the plugin zip can be uploaded via the admin page. In older versions, deploy manually by copying the zip file into TeamCity plugin directory inside the data directory, usually `.BuildServer`
 
 ```
 scp build/distributions/TCSlackNotifierPlugin-<version>.zip buildserver:.BuildServer/plugins/
@@ -66,7 +66,9 @@ Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere in
 
 # Note on TeamCity version support
 
-I'm still using **TeamCity 7.1** , but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also. Users have reported it working on version 9 also.
+Version 3 was updated for TeamCity 2017.2 support. It was just a settings update and recompile - so any issues from previous versions remain.
+
+Previous versions where built for TeamCity 7.1, but a few tests on the free version of TeamCity 8 went fine, and it seems to work there also. Users have reported it working on version 9 also.
 
 ### Issues
 

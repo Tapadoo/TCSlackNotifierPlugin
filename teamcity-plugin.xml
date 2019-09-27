@@ -4,12 +4,12 @@
     <info>
         <name>slackNotifier</name> <!-- the name of plugin used in teamcity -->
         <display-name>Slack Notifier</display-name>
-        <version>2.4.0</version>
+        <version>4.4.1</version>
         <description>Post build success notifications to Slack</description>
         <vendor>
             <name>Tapadoo</name>
             <url>http://tapadoo.com</url>
-            <logo>http://buzz.tapadoo.com/tp_small_logo.png</logo>
+            <logo>https://apps.tapadoo.com/tp_small_logo.png</logo>
         </vendor>
     </info>
     <deployment use-separate-classloader="true" /> <!-- load server plugin's classes in separate classloader-->
