@@ -53,7 +53,7 @@ This by default will post all builds to slack. you can tweak these on a project 
 
 To change channel, change the slack logo used for that project or disable per project:
 
-Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere inside `.BuildServer/config/projects/PROJECTNAME`
+Edit the plugin specific xml config, `plugin-settings.xml` probably somewhere inside `.BuildServer/config/projects/PROJECTNAME/pluginData`
 
 ```
 <settings>
