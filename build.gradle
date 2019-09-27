@@ -1,14 +1,10 @@
-
 repositories {
     mavenCentral()
 
-    maven {
-        url "https://download.jetbrains.com/teamcity-repository/"
-    }
+    maven { url "https://download.jetbrains.com/teamcity-repository/" }
 }
 
 apply plugin: 'java'
-
 
 sourceCompatibility = 1.8
 version = '4.4.1'
@@ -19,32 +15,37 @@ configurations {
 }
 
 dependencies {
-    compile 'org.jetbrains.teamcity:server-api:2018.2+'
-    compile 'org.jetbrains.teamcity:common-api:2018.2+'
-    compile 'com.google.code.gson:gson:2.+'
-    compile 'org.jdom:jdom:1+'
-    compile 'joda-time:joda-time:2.3'
-    deploy 'com.google.code.gson:gson:2.+'
-    deploy 'joda-time:joda-time:2.3'
+    def teamcity = '2019.1.3'
+    def gson = 'com.google.code.gson:gson:2.8.5'
+    def joda_time = 'joda-time:joda-time:2.10.4'
+
+    implementation "org.jetbrains.teamcity:server-api:$teamcity"
+    implementation "org.jetbrains.teamcity:common-api:$teamcity"
+    implementation 'org.jdom:jdom:2.0.2'
+    implementation gson
+    implementation joda_time
+
+    deploy gson
+    deploy joda_time
 }
 
-
 /**
- *
- * not using
- apply plugin: 'distribution' and distributions closure as it makes a subfolder in zip which I do not want
- *
+ * not using apply plugin: 'distribution' and distributions closure as it makes a subfolder in zip which I do not want
  * */
-task buildZip(dependsOn:'jar' , type: Zip) {
+task buildZip(dependsOn: 'jar', type: Zip) {
+    from('.')
+    include('teamcity-plugin.xml')
 
-        from('.')
-        include('teamcity-plugin.xml')
+    into('server') {
+        from jar.outputs.files
+        include('*.jar')
 
-        into('server') {
-            from jar.outputs.files
-            include('*.jar')
+        from configurations.deploy
+        include('*.jar')
+    }
+}
 
-            from configurations.deploy
-            include('*.jar')
-        }
+wrapper {
+    gradleVersion = "5.6.2"
+    distributionType = "all"
 }
