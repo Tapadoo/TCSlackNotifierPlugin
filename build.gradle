@@ -19,7 +19,7 @@ repositories {
 apply plugin: 'kotlin'
 
 sourceCompatibility = 1.8
-version = '5.0.0'
+version = VERSION
 println("##teamcity[buildNumber '$version']")
 
 configurations {
