@@ -40,6 +40,8 @@ dependencies {
 
   deploy gson
   deploy joda_time
+
+  testImplementation 'junit:junit:4.12'
 }
 
 /**
