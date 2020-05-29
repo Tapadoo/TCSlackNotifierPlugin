@@ -2,9 +2,9 @@
 <teamcity-plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="urn:shemas-jetbrains-com:teamcity-plugin-v1-xml">
     <info>
-        <name>slackNotifier</name> <!-- the name of plugin used in teamcity -->
-        <display-name>Slack Notifier</display-name>
-        <version>4.4.1</version>
+        <name>tpSlackNotifier</name> <!-- the name of plugin used in teamcity -->
+        <display-name>Tapadoo Slack Notifier</display-name>
+        <version>4.5.0</version>
         <description>Post build success notifications to Slack</description>
         <vendor>
             <name>Tapadoo</name>
