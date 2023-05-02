@@ -27,7 +27,7 @@ configurations {
 }
 
 dependencies {
-  def teamcity = '2019.1.3'
+  def teamcity = '2022.10'
   def gson = 'com.google.code.gson:gson:2.8.5'
   def joda_time = 'joda-time:joda-time:2.10.4'
 

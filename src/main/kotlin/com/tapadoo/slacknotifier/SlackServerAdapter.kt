@@ -167,6 +167,7 @@ class SlackServerAdapter(
       if (build.isHasRelatedIssues) {
 
         // We do!
+        //val issues = build.relatedIssues.distinctBy { it.id } 
         val issues = build.relatedIssues
         val issueIds = StringBuilder()
         val clickableIssueIds = StringBuilder()
