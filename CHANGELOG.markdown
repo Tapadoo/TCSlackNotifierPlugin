@@ -1,3 +1,6 @@
+# 2023.1
+* changing version scheme, attempting a quick fix for repeated issues
+
 # 4.5.0
 * changing plugin name from slackNotifier to tpSlackNotifier incase it's causing conflicts with official one
 
