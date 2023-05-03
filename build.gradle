@@ -61,6 +61,6 @@ task buildZip(dependsOn: 'jar', type: Zip) {
 }
 
 wrapper {
-  gradleVersion = "5.6.2"
+  gradleVersion = "7.4.2"
   distributionType = Wrapper.DistributionType.ALL
 }
