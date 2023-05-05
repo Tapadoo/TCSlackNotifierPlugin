@@ -1,3 +1,9 @@
+# 2023.1
+* changing version scheme, attempting a quick fix for repeated issues
+
+# 4.5.0
+* changing plugin name from slackNotifier to tpSlackNotifier incase it's causing conflicts with official one
+
 # 4.4.1
 * Added support for teamcity configuration parameter "system.SLACK_IGNORE_COMMIT_MESSAGE" to allow user to ignore adding commits to slack message.
 

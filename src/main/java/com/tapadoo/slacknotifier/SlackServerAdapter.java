@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
 
 
 /**
@@ -273,7 +275,18 @@ public class SlackServerAdapter extends BuildServerAdapter {
             {
 
                 //We do!
-                Collection<Issue> issues = build.getRelatedIssues();
+                ArrayList<Issue> issues = new ArrayList<Issue>();
+
+                // Filter the isseues by id - NOTE: I tried fancier language features , but I had issues with syntax, sdk, and compiling
+                // so it was quicker to write a traditional, inefficient nested loop than it was to improve my java
+                for (Issue issue : build.getRelatedIssues()) {
+                    for (Issue existingIssue : issues) {
+                        if (existingIssue.getId().equalsIgnoreCase(issue.getId())) {
+                            break;
+                        }
+                    }   
+                    issues.add(issue);
+                }
 
                 StringBuilder issueIds = new StringBuilder();
                 StringBuilder clickableIssueIds = new StringBuilder();
