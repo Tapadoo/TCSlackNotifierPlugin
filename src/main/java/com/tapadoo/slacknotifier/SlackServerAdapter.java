@@ -280,12 +280,18 @@ public class SlackServerAdapter extends BuildServerAdapter {
                 // Filter the isseues by id - NOTE: I tried fancier language features , but I had issues with syntax, sdk, and compiling
                 // so it was quicker to write a traditional, inefficient nested loop than it was to improve my java
                 for (Issue issue : build.getRelatedIssues()) {
+                    boolean exists = false ;
+                    
                     for (Issue existingIssue : issues) {
                         if (existingIssue.getId().equalsIgnoreCase(issue.getId())) {
+                            exists = true;
                             break;
                         }
                     }   
-                    issues.add(issue);
+
+                    if (!exists) {
+                        issues.add(issue);
+                    }
                 }
 
                 StringBuilder issueIds = new StringBuilder();
