@@ -1,3 +1,6 @@
+# 2023.2
+Faulty check for dupliates - trying to fix again
+
 # 2023.1
 * changing version scheme, attempting a quick fix for repeated issues
 
